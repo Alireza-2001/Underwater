@@ -1,42 +1,93 @@
-#include <ArduinoJson.h>
+#include <Arduino.h>
+#include <UbxGpsNavPvt.h>
+#include <math.h>
 
-const unsigned long serial_monitor_baudrate = 115200;
-const unsigned long raspi_serial_baudrate = 115200;
+
+#define GPS_BAUDRATE 115200L
+#define PC_BAUDRATE 115200L
 
 
-DynamicJsonDocument joystick(1024);
-DynamicJsonDocument setting(1024);
+UbxGpsNavPvt<HardwareSerial> gps(Serial2);
 
+
+const double pi = 3.14159265358979323;
+const double radius_earth = 6371000.0;
+
+double lat = 0.0;
+double lon = 0.0;
+
+double h1 = 0.0;
+double h_t = 0.0;
+double delta_h = 0.0;
+
+double lat_t = 31.8349561;
+double lon_t = 54.3539401;
+
+float dis = 0.0;
+
+unsigned long int t1 = 0;
+int interval = 1000;
 
 void setup()
 {
-  Serial.begin(serial_monitor_baudrate);
-  Serial1.begin(raspi_serial_baudrate);
+  Serial.begin(PC_BAUDRATE);
+  gps.begin(GPS_BAUDRATE);
 }
 
-void get_serial_data()
+double haversine_distance(double lat1, double lon1, double lat2, double lon2)
 {
-  if (Serial1.available() > 0)
-  {
-    String tmp = Serial1.readStringUntil('>');
-    if (tmp.length() == 59)
-    {
-      deserializeJson(joystick, tmp);
+  lat1 = radians(lat1);
+  lon1 = radians(lon1);
+  lat2 = radians(lat2);
+  lon2 = radians(lon2);
 
-    }
-    else if (tmp.length() == 12)
-    {
-      deserializeJson(setting, tmp);
-
-    }
-  }
-  else
-  {
-
-  }
+  double dlon = lon2 - lon1;
+  double dlat = lat2 - lat1;
+  double a = pow(sin(dlat/2), 2) + cos(lat1) * cos(lat2) * pow(sin(dlon/2), 2);
+  double c = 2 * atan2(sqrt(a), sqrt(1-a));
+  double distance = c * radius_earth;
+  return distance;
 }
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
+  if (gps.ready())
+  {
+    lon = gps.lon / 10000000.0;
+
+    lat = gps.lat / 10000000.0;
+
+    h1 = 90 - gps.heading / 100000.0;
+
+    if (h1 > 180)
+    {
+      h1 = -360 + h1;
+    }
+    else 
+    {
+      h1 = h1;
+    }
+
+    h_t = degrees(atan2(lat_t - lat, lon_t - lon));
+
+    dis = haversine_distance(lat, lon,lat_t, lon_t);
+  }
+
+  if (millis() - t1 > interval)
+  {
+    t1 = millis();
+
+    Serial.print(lon, 7);
+    Serial.print(", ");
+    Serial.print(lat, 7);
+    Serial.print(", ");
+    Serial.print(h1, 2);
+    Serial.print(", ");
+    Serial.print(h_t, 2);
+    Serial.print(", ");
+    Serial.print(h1 - h_t, 2);
+    Serial.print(", ");
+    Serial.print(dis, 2);
+    Serial.println();
+  }
 }
