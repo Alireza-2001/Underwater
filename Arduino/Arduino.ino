@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <UbxGpsNavPvt.h>
 #include <math.h>
 
@@ -6,6 +7,8 @@
 #define GPS_BAUDRATE 115200L
 #define PC_BAUDRATE 115200L
 
+DynamicJsonDocument joystick(1024);
+DynamicJsonDocument setting(1024);
 
 UbxGpsNavPvt<HardwareSerial> gps(Serial2);
 
@@ -25,8 +28,6 @@ double lon_t = 54.3539401;
 
 float dis = 0.0;
 
-unsigned long int t1 = 0;
-int interval = 1000;
 
 void setup()
 {
@@ -49,7 +50,7 @@ double haversine_distance(double lat1, double lon1, double lat2, double lon2)
   return distance;
 }
 
-void loop()
+void update_gps()
 {
   if (gps.ready())
   {
@@ -72,7 +73,13 @@ void loop()
 
     dis = haversine_distance(lat, lon,lat_t, lon_t);
   }
+}
 
+unsigned long int t1 = 0;
+int interval = 1000;
+
+void auto_navigation()
+{
   if (millis() - t1 > interval)
   {
     t1 = millis();
@@ -90,4 +97,41 @@ void loop()
     Serial.print(dis, 2);
     Serial.println();
   }
+}
+
+
+
+
+void loop()
+{
+  if (Serial.available() > 0)
+  {
+
+  }
+
+
+  if (Serial1.available() > 0)
+  {
+    String tmp = Serial1.readStringUntil('>');
+    if (tmp.length() == 59)
+    {
+      deserializeJson(joystick, tmp);
+
+    }
+    else if (tmp.length() == 12)
+    {
+      deserializeJson(setting, tmp);
+
+      if (int(setting["1"]) > 0)
+      {
+
+      }
+    }
+  }
+
+
+
+
+  update_gps();
+
 }
