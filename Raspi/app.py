@@ -2,8 +2,8 @@ import sys
 import socket, json, datetime, os, serial, cv2
 from flask import Flask, render_template, Response
 from time import time, sleep
-from PyQt6 import QtCore
-from PyQt6.QtWidgets import QApplication, QWidget
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QApplication, QWidget
 from mainwindow import Ui_mainwindow
 
 
