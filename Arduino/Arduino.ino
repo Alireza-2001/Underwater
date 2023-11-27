@@ -41,6 +41,7 @@ const double radius_earth = 6371000.0;
 int state = RESET;
 int rov_state = 0;
 int auv_state = 0;
+int auv1_run = 0;
 int jyro_state = 0;
 
 double lat = 0.0;
@@ -113,8 +114,11 @@ void AUV1_func()
     h_t = degrees(atan2(points_lat[current_point] - lat, points_lon[current_point] - lon));
 
     dis = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
-    
 
+    if (dis > 2)
+    {
+      current_point ++;
+    }
 
     Serial.print(lon, 7);
     Serial.print(", ");
@@ -221,45 +225,66 @@ void loop()
 
     if (auv_state == AUV_1)
     {
-      String tmp = Serial.readString();
-
-      for (int i = 0; i < tmp.toInt(); i++)
+      if (auv1_run == 0)
       {
-        Serial.println("Point " + String(i+1));
-        Serial.println("Enter lat" + String(i+1));
-        while (1)
+        String tmp = Serial.readString();
+
+        for (int i = 0; i < tmp.toInt(); i++)
         {
-          String tmp = Serial.readString();
-          if (tmp.toDouble())
+          Serial.println("Point " + String(i+1));
+          Serial.println("Enter lat" + String(i+1));
+          while (1)
           {
-            points_lat[i] = tmp.toDouble();
-            break;
+            String tmp = Serial.readString();
+            if (tmp.toDouble())
+            {
+              points_lat[i] = tmp.toDouble();
+              Serial.println(points_lat[i], 7);
+              break;
+            }
           }
-        }
-        Serial.println("Enter lon" + String(i+1));
-        while (1)
-        {
-          String tmp = Serial.readString();
-          if (tmp.toDouble())
+          Serial.println("Enter lon" + String(i+1));
+          while (1)
           {
-            points_lon[i] = tmp.toDouble();
-            break;
+            String tmp = Serial.readString();
+            if (tmp.toDouble())
+            {
+              points_lon[i] = tmp.toDouble();
+              break;
+            }
           }
-        }
-        Serial.println("Enter time" + String(i+1));    
-        while (1)
-        {
-          String tmp = Serial.readString();
-          if (tmp.toDouble())
+          Serial.println("Enter time" + String(i+1));    
+          while (1)
           {
-            points_time[i] = tmp.toDouble();
-            break;
+            String tmp = Serial.readString();
+            if (tmp.toDouble())
+            {
+              points_time[i] = tmp.toDouble();
+              break;
+            }
           }
+
+          if(i == tmp.toInt() -1)
+            Serial.println("4 : RUN");
+          
+          while (1)
+          {
+            String tmp = Serial.readString();
+            if (tmp.toDouble())
+            {
+              if (tmp == "4")
+                auv1_run = 1;
+              break;
+            }
+          }
+          
         }
       }
-
-      AUV1_func();
-
+      else if(auv1_run == 1)
+      {
+        AUV1_func();
+      }
+        
     }
   }
   else if (state == JYRO)
