@@ -7,14 +7,39 @@
 #define GPS_BAUDRATE 115200L
 #define PC_BAUDRATE 115200L
 
+
+#define ROV 1
+#define AUV 2
+#define JYRO 3
+#define RESET 4
+
+#define ROV_RUN 10
+#define ROV_STOP 11
+
+#define AUV_1 20
+#define AUV_2 21
+#define AUV_STOP 22
+
+#define JYRO_ENABLE 30
+#define JYRO_DISABLE 31
+
 DynamicJsonDocument joystick(1024);
 DynamicJsonDocument setting(1024);
 
 UbxGpsNavPvt<HardwareSerial> gps(Serial2);
 
+double points_lat [30];
+double points_lon [30];
+int points_time [30];
+
 
 const double pi = 3.14159265358979323;
 const double radius_earth = 6371000.0;
+
+int state = RESET;
+int rov_state = 0;
+int auv_state = 0;
+int jyro_state = 0;
 
 double lat = 0.0;
 double lon = 0.0;
@@ -33,6 +58,8 @@ void setup()
 {
   Serial.begin(PC_BAUDRATE);
   gps.begin(GPS_BAUDRATE);
+
+  start_menu();
 }
 
 double haversine_distance(double lat1, double lon1, double lat2, double lon2)
@@ -100,17 +127,17 @@ void auto_navigation()
   }
 }
 
-
-
-
-void loop()
+void start_menu()
 {
-  if (Serial.available() > 0)
-  {
+  Serial.println(String(ROV) + " : ROV");
+  Serial.println(String(AUV) + " : AUV");
+  Serial.println(String(JYRO) + " : JYRO");
+  Serial.println(String(RESET) + " : RESET");
+}
 
-  }
 
-
+void ROV_func()
+{
   if (Serial1.available() > 0)
   {
     String tmp = Serial1.readStringUntil('>');
@@ -119,15 +146,121 @@ void loop()
       deserializeJson(joystick, tmp);
 
     }
-    else if (tmp.length() == 12)
+  }
+}
+
+void AUV1_func()
+{
+
+}
+
+
+void loop()
+{
+  if (state == RESET)
+  {
+    if (Serial.available() > 0)
     {
-      deserializeJson(setting, tmp);
+      String tmp = Serial.readString();
 
-      if (int(setting["1"]) > 0)
+      if (tmp == String(ROV))
       {
+        state = ROV;
+        Serial.println("ROV state started...");
+      }
+      else if (tmp == String(AUV))
+      {
+        state = AUV;
 
+        Serial.println("1 : AUV 1");
+        Serial.println("2 : AUV 2");
+        Serial.println("3 : Resrt");
+      }
+      else if (tmp == String(JYRO))
+      {
+        state = JYRO;
+      }
+      else if (tmp == String(RESET))
+      {
+        state = RESET;
+        Serial.println("Reset Done.");
+        start_menu();
       }
     }
+  }
+  else if (state == ROV)
+  {
+    ROV_func(); // TODO : break code
+  }
+  else if (state == AUV)
+  {
+    if (auv_state != AUV_1 && auv_state != AUV_2)
+    {
+      String tmp = Serial.readString();
+
+      if (tmp == "1")
+      {
+        auv_state = AUV_1;
+        Serial.println("Enter the count of points : ");
+      }
+      else if (tmp == "2")
+      {
+        auv_state = AUV_2;
+      }
+      else if (tmp == "3")
+      {
+        state = RESET;
+        auv_state = AUV_STOP;
+        start_menu();
+      }
+    }
+
+    if (auv_state == AUV_1)
+    {
+      String tmp = Serial.readString();
+
+      for (int i = 0; i < tmp.toInt(); i++)
+      {
+        Serial.println("Point " + String(i));
+        Serial.println("Enter lat" + String(i));
+        while (1)
+        {
+          String tmp = Serial.readString();
+          if (tmp.toDouble())
+          {
+            points_lat[i] = tmp.toDouble();
+            break;
+          }
+        }
+        Serial.println("Enter lon" + String(i));
+        while (1)
+        {
+          String tmp = Serial.readString();
+          if (tmp.toDouble())
+          {
+            points_lon[i] = tmp.toDouble();
+            break;
+          }
+        }
+        Serial.println("Enter time" + String(i));    
+        while (1)
+        {
+          String tmp = Serial.readString();
+          if (tmp.toDouble())
+          {
+            points_time[i] = tmp.toDouble();
+            break;
+          }
+        }
+      }
+
+      AUV1_func();
+
+    }
+  }
+  else if (state == JYRO)
+  {
+    
   }
 
 
