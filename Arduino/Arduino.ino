@@ -4,6 +4,13 @@
 #include <math.h>
 
 
+double haversine_distance(double lat1, double lon1, double lat2, double lon2);
+void update_gps();
+void AUV1_func();
+void start_menu();
+void ROV_func();
+
+
 #define GPS_BAUDRATE 115200L
 #define PC_BAUDRATE 115200L
 
@@ -115,7 +122,7 @@ void AUV1_func()
 
     dis = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
 
-    if (dis > 2)
+    if (dis < 2)
     {
       current_point ++;
     }
@@ -232,18 +239,19 @@ void loop()
         for (int i = 0; i < tmp.toInt(); i++)
         {
           Serial.println("Point " + String(i+1));
-          Serial.println("Enter lat" + String(i+1));
+          Serial.println("Enter lat :" + String(i+1));
           while (1)
           {
-            String tmp = Serial.readString();
-            if (tmp.toDouble())
+            float tmp = Serial.parseFloat();
+            if (tmp)
             {
-              points_lat[i] = tmp.toDouble();
+              points_lat[i] = double(tmp);
               Serial.println(points_lat[i], 7);
+
               break;
             }
           }
-          Serial.println("Enter lon" + String(i+1));
+          Serial.println("Enter lon :" + String(i+1));
           while (1)
           {
             String tmp = Serial.readString();
@@ -253,7 +261,7 @@ void loop()
               break;
             }
           }
-          Serial.println("Enter time" + String(i+1));    
+          Serial.println("Enter time :" + String(i+1));    
           while (1)
           {
             String tmp = Serial.readString();
