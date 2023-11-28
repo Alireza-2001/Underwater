@@ -101,7 +101,7 @@ void update_gps()
 
 
 unsigned long int t1 = 0;
-int interval = 1000;
+unsigned int interval = 1000;
 
 void AUV1_func()
 {
