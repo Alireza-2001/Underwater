@@ -130,7 +130,7 @@ void AUV1_func()
     dis = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
 
 
-    if (dis < 2)
+    if (dis < 1)
     {
       if (current_point == count_point - 1)
       {
@@ -143,7 +143,7 @@ void AUV1_func()
       {
         Serial.println("Target " + String(current_point + 1));
         Serial.println("1 : run");
-        
+        t2 = millis();
         while (1)
         {
           String tmp = Serial.readString();
@@ -153,7 +153,7 @@ void AUV1_func()
             Serial.println("Start...");
             break;
           }
-          t2 = millis();
+          
           if (millis() - t2 > points_time[current_point] * 1000)
           {
             Serial.println("Start...");
@@ -165,6 +165,8 @@ void AUV1_func()
       }
     }
 
+    delta_h = h1 - h_t;
+
     Serial.print(lat, 7);
     Serial.print(", ");
     Serial.print(lon, 7);
@@ -173,20 +175,20 @@ void AUV1_func()
     Serial.print(", ");
     Serial.print(h_t, 2);
     Serial.print(", ");
-    Serial.print(h1 - h_t, 2);
+    Serial.print(delta_h, 2);
     Serial.print(", ");
     Serial.print(dis, 2);
     Serial.print(", ");
 
-    if (h_t < -1.0)
+    if (delta_h < -10.0)
     {
       Serial.print("Left");
     }
-    else if (-1.0 <= h_t && h_t <= 1.0)
+    else if (-10.0 <= delta_h && delta_h <= 10.0)
     {
       Serial.print("Forward");
     }
-    else if (h_t > 1.0)
+    else if (delta_h > 10.0)
     {
       Serial.print("Right");
     }
@@ -320,7 +322,7 @@ void loop()
             }
           }
 
-          if(i == tmp.toInt() -1)
+          if(i == tmp.toInt() - 1)
             Serial.println("4 : RUN");
           
           while (1)
@@ -349,6 +351,6 @@ void loop()
 }
 
 
-// 318359938    543541560
+// 318360384    543541824
 
-// 318358283    543543947
+// 318359200    543542976
