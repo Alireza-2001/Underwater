@@ -37,10 +37,9 @@ UbxGpsNavPvt<HardwareSerial> gps(Serial2);
 
 double points_lat [30];
 double points_lon [30];
-int points_time [30];
+unsigned int points_time [30];
+int count_point = 0;
 int current_point = 0;
-
-
 
 const double pi = 3.14159265358979323;
 const double radius_earth = 6371000.0;
@@ -63,6 +62,10 @@ double lon_t = 54.3539401;
 
 float dis = 0.0;
 
+unsigned long int t1 = 0;
+unsigned long int t2 = 0;
+unsigned int interval = 1000;
+
 
 void setup()
 {
@@ -79,9 +82,9 @@ double haversine_distance(double lat1, double lon1, double lat2, double lon2)
   lat2 = radians(lat2);
   lon2 = radians(lon2);
 
-  double dlon = lon2 - lon1;
-  double dlat = lat2 - lat1;
-  double a = pow(sin(dlat/2), 2) + cos(lat1) * cos(lat2) * pow(sin(dlon/2), 2);
+  double dlon = (lon2 - lon1);
+  double dlat = (lat2 - lat1);
+  double a = pow(sin((dlat / 2) / 10000000.0), 2) + cos(lat1 / 10000000.0) * cos(lat2 / 10000000.0) * pow(sin((dlon / 2) / 10000000.0), 2);
   double c = 2 * atan2(sqrt(a), sqrt(1-a));
   double distance = c * radius_earth;
   return distance;
@@ -91,17 +94,17 @@ void update_gps()
 {
   if (gps.ready())
   {
-    lon = gps.lon / 10000000.0;
+    // lon = gps.lon / 10000000.0;
 
-    lat = gps.lat / 10000000.0;
+    // lat = gps.lat / 10000000.0;
+
+    lon = gps.lon;
+
+    lat = gps.lat;
 
     h1 = 90 - gps.heading / 100000.0;
   }
 }
-
-
-unsigned long int t1 = 0;
-unsigned int interval = 1000;
 
 void AUV1_func()
 {
@@ -118,13 +121,48 @@ void AUV1_func()
       h1 = h1;
     }
 
-    h_t = degrees(atan2(points_lat[current_point]/10000000 - lat, points_lon[current_point]/10000000 - lon));
+    // h_t = degrees(atan2(points_lat[current_point] / 10000000.0 - lat, points_lon[current_point] / 10000000.0 - lon));
 
-    dis = haversine_distance(lat, lon, points_lat[current_point]/10000000, points_lon[current_point]/10000000);
+    // dis = haversine_distance(lat, lon, points_lat[current_point] / 10000000.02, points_lon[current_point] / 10000000.0);
+    
+    h_t = degrees(atan2(points_lat[current_point] - lat, points_lon[current_point] - lon));
+
+    dis = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
+
 
     if (dis < 2)
     {
-      current_point ++;
+      if (current_point == count_point - 1)
+      {
+        Serial.println("Finished.");
+        auv_state = AUV_STOP;
+        state = RESET;
+        start_menu();
+      }
+      else
+      {
+        Serial.println("Target " + String(current_point + 1));
+        Serial.println("1 : run");
+        
+        while (1)
+        {
+          String tmp = Serial.readString();
+
+          if (tmp == "1")
+          {
+            Serial.println("Start...");
+            break;
+          }
+          t2 = millis();
+          if (millis() - t2 > points_time[current_point] * 1000)
+          {
+            Serial.println("Start...");
+            break;
+          }
+        }
+        
+        current_point ++;
+      }
     }
 
     Serial.print(lat, 7);
@@ -138,6 +176,20 @@ void AUV1_func()
     Serial.print(h1 - h_t, 2);
     Serial.print(", ");
     Serial.print(dis, 2);
+    Serial.print(", ");
+
+    if (h_t < -1.0)
+    {
+      Serial.print("Left");
+    }
+    else if (-1.0 <= h_t && h_t <= 1.0)
+    {
+      Serial.print("Forward");
+    }
+    else if (h_t > 1.0)
+    {
+      Serial.print("Right");
+    }
     Serial.println();
   }
 }
@@ -148,8 +200,8 @@ void start_menu()
   Serial.println(String(AUV) + " : AUV");
   Serial.println(String(JYRO) + " : JYRO");
   Serial.println(String(RESET) + " : RESET");
+  Serial.println("-----------------------------------------------");
 }
-
 
 void ROV_func()
 {
@@ -164,11 +216,9 @@ void ROV_func()
   }
 }
 
-
 void loop()
 {
   update_gps();
-
 
   if (state == RESET)
   {
@@ -188,6 +238,7 @@ void loop()
         Serial.println("1 : AUV 1");
         Serial.println("2 : AUV 2");
         Serial.println("3 : Resrt");
+        Serial.println("-----------------------------------------------");
       }
       else if (tmp == String(JYRO))
       {
@@ -201,8 +252,6 @@ void loop()
       }
     }
   }
-
-
   else if (state == ROV)
   {
     ROV_func(); // TODO : break code
@@ -235,6 +284,7 @@ void loop()
       if (auv1_run == 0)
       {
         String tmp = Serial.readString();
+        count_point = tmp.toInt();
 
         for (int i = 0; i < tmp.toInt(); i++)
         {
@@ -276,21 +326,20 @@ void loop()
           while (1)
           {
             String tmp = Serial.readString();
-            if (tmp.toDouble())
+            if (tmp)
             {
               if (tmp == "4")
                 auv1_run = 1;
               break;
             }
           }
-          
+          Serial.println("-----------------------------------------------");
         }
       }
       else if(auv1_run == 1)
       {
         AUV1_func();
       }
-        
     }
   }
   else if (state == JYRO)
@@ -298,3 +347,8 @@ void loop()
     
   }
 }
+
+
+// 318359938    543541560
+
+// 318358283    543543947
