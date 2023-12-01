@@ -143,7 +143,6 @@ void motor_attach()
   left_motor.attach(left_motor_pin);
   left_motor.writeMicroseconds(1500);
 
-
   front_motor.attach(vertical_motor_front_pin);
   front_motor.writeMicroseconds(1500);
 
