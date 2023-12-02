@@ -26,7 +26,7 @@ def socket_config():
         print(e)
 
 
-def mian():
+def main():
     pass
 
 if __name__ == '__main__':
