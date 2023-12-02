@@ -67,13 +67,14 @@ const double radius_earth = 6371000.0;
 String data[13];
 
 int gear = 1;
-int j = 1;
 float allowed_yaw_angle = 0;
 float allowed_pitch_angle = 0;
+float dif_yaw_angle = 0.0;
+float dif_pitch_angle = 0.0;
 
-int pwm_step = 5;
-int yaw_pwm_step = 5;
-int pitch_pwm_step = 5;
+int pwm_step = 40;
+int yaw_pwm_step = 0;
+int pitch_pwm_step = 0;
 
 int key_1 = 0;
 int joy_front_back = 128;
@@ -165,6 +166,7 @@ void set_motor_pwm()
 void mpu_config()
 {
 
+
 }
 
 void send_data_to_operator()
@@ -184,7 +186,7 @@ void send_data_to_operator()
 
   data[10] = String(allowed_yaw_angle);
   data[11] = String(allowed_pitch_angle);
-  data[12] = String(j);
+  data[12] = String(jyro_state);
 
   String tmp = data[0] + "," + data[1] + "," + data[2] + "," + data[3] + "," + data[4] + "," + data[5] + "," + data[6] + "," + data[7] + "," + data[8] + "," + data[9] + "," + data[10] + "," + data[11]+ "," + data[12];
 
@@ -196,16 +198,16 @@ void check_gear()
   // Dandeh 1: 1400 - 1600 2: 1300 - 1700 3: 1200 - 1800 4: 1100 - 1900
   switch (gear) {
     case 1:
-      propulsion_controll(1420, 1580);
+      propulsion_controll(1400, 1600);
       break;
     case 2:
       propulsion_controll(1300, 1700);
       break;
     case 3:
-      propulsion_controll(1220, 1780);
+      propulsion_controll(1200, 1800);
       break;
     case 4:
-      propulsion_controll(1150, 1900);
+      propulsion_controll(1100, 1900);
       break;
   }
 }
@@ -231,10 +233,12 @@ void check_keys()
     case 7:
       break;
     case 9:
-      j = 0;
+      jyro_state = JYRO_ENABLE;
+      allowed_pitch_angle = pitch;
+      allowed_yaw_angle = yaw;
       break;
     case 10:
-      j = 1;
+      jyro_state = JYRO_DISABLE;
       break;
     case 17:
       digitalWrite(led_pin, HIGH);
@@ -284,51 +288,35 @@ void propulsion_controll(int min_pwm, int max_pwm)
   top_motor_pwm = map(joy_front_back, 0, 255, min_pwm, max_pwm) + 1;
   bottom_motor_pwm = map(joy_front_back, 0, 255, min_pwm, max_pwm) + 1;
 
-  right_motor_pwm = map(255 - joy_left_right, 0, 255, min_pwm, max_pwm) + 1;
-  left_motor_pwm = map(joy_left_right, 0, 255, min_pwm, max_pwm) + 1;
-
-
-  if (joy_left_right < 130 && joy_left_right > 125)
+  if (joy_left_right < 130 && joy_left_right > 125) // forward move
   {
     right_motor_pwm = map(joy_front_back, 0, 255, min_pwm, max_pwm) + 1;
     left_motor_pwm = map(joy_front_back, 0, 255, min_pwm, max_pwm) + 1;
-    if (j == 0)
+    if (jyro_state == JYRO_ENABLE)// jyro yaw angle
     {
-      if (yaw < allowed_yaw_angle - 1)
+      if (yaw < allowed_yaw_angle - 2)
       {
-        float dif = abs(yaw - allowed_yaw_angle);
-        if (dif < 10)
+        dif_yaw_angle = abs(yaw - allowed_yaw_angle);
+        if (dif_yaw_angle < 10)
           yaw_pwm_step = pwm_step;
-        else if (dif >= 10 && dif < 20)
+        else if (dif_yaw_angle >= 10 && dif_yaw_angle < 30)
           yaw_pwm_step = 2*pwm_step;
-        else if (dif >= 20 && dif < 30)
+        else if (dif_yaw_angle >= 30)
           yaw_pwm_step = 3*pwm_step;
-        else if (dif >= 30 && dif < 40)
-          yaw_pwm_step = 4*pwm_step;
-        else if (dif >= 40 && dif < 50)
-          yaw_pwm_step = 5*pwm_step;
-        else if(dif >= 50)
-          yaw_pwm_step = 6*pwm_step;
-  
-        right_motor_pwm -= yaw_pwm_step;
+
         left_motor_pwm += yaw_pwm_step;
+        right_motor_pwm -= yaw_pwm_step;
       }
-      else if (yaw > allowed_yaw_angle + 1)
+      else if (yaw > allowed_yaw_angle + 2)
       {
-        float dif = abs(yaw - allowed_yaw_angle);
-        if (dif < 10)
+        dif_yaw_angle = abs(yaw - allowed_yaw_angle);
+        if (dif_yaw_angle < 10)
           yaw_pwm_step = pwm_step;
-        else if (dif >= 10 && dif < 20)
+        else if (dif_yaw_angle >= 10 && dif_yaw_angle < 30)
           yaw_pwm_step = 2*pwm_step;
-        else if (dif >= 20 && dif < 30)
+        else if (dif_yaw_angle >= 30)
           yaw_pwm_step = 3*pwm_step;
-        else if (dif >= 30 && dif < 40)
-          yaw_pwm_step = 4*pwm_step;
-        else if (dif >= 40 && dif < 50)
-          yaw_pwm_step = 5*pwm_step;
-        else if (dif >= 50)
-          yaw_pwm_step = 6*pwm_step;
-        
+ 
         right_motor_pwm += yaw_pwm_step;
         left_motor_pwm -= yaw_pwm_step;
       }
@@ -336,15 +324,16 @@ void propulsion_controll(int min_pwm, int max_pwm)
   }
   else
   {
+    right_motor_pwm = map(255 - joy_left_right, 0, 255, min_pwm, max_pwm) + 1;
+    left_motor_pwm = map(joy_left_right, 0, 255, min_pwm, max_pwm) + 1;
     allowed_yaw_angle = yaw;
   }
 
-  up_down_controll(min_pwm, max_pwm);
+  up_down_controll(1100, 1900);
 
   check_max_min_motor_pwm();
 
   set_motor_pwm();
-  send_data_to_operator();
 }
 
 void up_down_controll(int min_pwm, int max_pwm)
@@ -352,6 +341,7 @@ void up_down_controll(int min_pwm, int max_pwm)
   if (joy < 127 || joy > 128)
   {
     vertical_motor_front_pwm = map(255 - joy, 255, 0, min_pwm, max_pwm) + 1;
+    vertical_motor_back_pwm = map(joy, 255, 0, min_pwm, max_pwm) + 1;
     allowed_pitch_angle = pitch;
   }
 
@@ -360,78 +350,69 @@ void up_down_controll(int min_pwm, int max_pwm)
     vertical_motor_front_pwm = map(joy_up_down, 0, 255, min_pwm, max_pwm) + 1;
     vertical_motor_back_pwm = map(joy_up_down, 0, 255, min_pwm, max_pwm) + 1;
 
-    if (j == 0)
+    if(key_1 == 11)
     {
-      if (pitch < allowed_pitch_angle - 1)
+      vertical_motor_front_pwm = 1350;
+      vertical_motor_back_pwm = 1350;
+    }
+    else if(key_1 == 12)
+    {
+      vertical_motor_front_pwm = 1300;
+      vertical_motor_back_pwm = 1300;
+    }
+    else if(key_1 == 15)
+    {
+      vertical_motor_front_pwm = 1100;
+      vertical_motor_back_pwm = 1100;
+    }
+    else if(key_1 == 13)
+    {
+      vertical_motor_front_pwm = 1600;
+      vertical_motor_back_pwm = 1600;
+    }
+    else if(key_1 == 14)
+    {
+      vertical_motor_front_pwm = 1750;
+      vertical_motor_back_pwm = 1750;
+    }
+    else if(key_1 == 16)
+    {
+      vertical_motor_front_pwm = 1900;
+      vertical_motor_back_pwm = 1900;
+    }
+
+    if (jyro_state == JYRO_ENABLE)
+    {
+      if (pitch < allowed_pitch_angle - 2)
       {
-        float dif = abs(pitch - allowed_pitch_angle);
-        if (dif < 10)
+        dif_pitch_angle = abs(pitch - allowed_pitch_angle);
+        if (dif_pitch_angle < 10)
           pitch_pwm_step = pwm_step;
-        else if (dif >= 10 && dif < 20)
+        else if (dif_pitch_angle >= 10 && dif_pitch_angle < 30)
           pitch_pwm_step = 2*pwm_step;
-        else if (dif >= 20 && dif < 30)
+        else if (dif_pitch_angle >= 30)
           pitch_pwm_step = 3*pwm_step;
-        else if (dif >= 30 && dif < 40)
-          pitch_pwm_step = 4*pwm_step;
-        else if (dif >= 40 && dif < 50)
-          pitch_pwm_step = 5*pwm_step;
-        else if(dif >= 50)
-          pitch_pwm_step = 6*pwm_step;
-  
-        vertical_motor_front_pwm -= pitch_pwm_step;
+
         vertical_motor_back_pwm += pitch_pwm_step;
+        vertical_motor_front_pwm -= pitch_pwm_step;
       }
-      else if (pitch > allowed_pitch_angle + 1)
+      else if (pitch > allowed_pitch_angle + 2)
       {
-        float dif = abs(pitch - allowed_pitch_angle);
-        if (dif < 5)
-          pitch_pwm_step = pwm_step;
-        else if (dif >= 5 && dif < 20)
+        dif_pitch_angle = abs(pitch - allowed_pitch_angle);
+        if (dif_pitch_angle < 10)
           pitch_pwm_step = 2*pwm_step;
-        else if (dif >= 20 && dif < 30)
+        else if (dif_pitch_angle >= 5 && dif_pitch_angle < 30)
           pitch_pwm_step = 3*pwm_step;
-        else if (dif >= 30 && dif < 40)
+        else if (dif_pitch_angle >= 30)
           pitch_pwm_step = 4*pwm_step;
-        else if (dif >= 40 && dif < 50)
-          pitch_pwm_step = 5*pwm_step;
-        else if (dif >= 50)
-          pitch_pwm_step = 6*pwm_step;
-        
-        vertical_motor_front_pwm += pitch_pwm_step;
+
+        if(vertical_motor_front_pwm < 1850)
+          vertical_motor_front_pwm += pitch_pwm_step;
+        else
+          vertical_motor_back_pwm -= pitch_pwm_step;
         vertical_motor_back_pwm -= pitch_pwm_step;
       }
     }
-  }
-
-  if(key_1 == 11)
-  {
-    vertical_motor_front_pwm = 1350;
-    vertical_motor_back_pwm = 1350;
-  }
-  if(key_1 == 12)
-  {
-    vertical_motor_front_pwm = 1300;
-    vertical_motor_back_pwm = 1300;
-  }
-  if(key_1 == 15)
-  {
-    vertical_motor_front_pwm = 1100;
-    vertical_motor_back_pwm = 1100;
-  }
-  if(key_1 == 13)
-  {
-    vertical_motor_front_pwm = 1600;
-    vertical_motor_back_pwm = 1600;
-  }
-  if(key_1 == 14)
-  {
-    vertical_motor_front_pwm = 1750;
-    vertical_motor_back_pwm = 1750;
-  }
-  if(key_1 == 16)
-  {
-    vertical_motor_front_pwm = 1900;
-    vertical_motor_back_pwm = 1900;
   }
 }
 
@@ -502,6 +483,20 @@ void ROV_func()
     {
       state = RESET;
       start_menu();
+      gear = 1;
+      top_motor_pwm = 1500;
+      bottom_motor_pwm = 1500;
+      left_motor_pwm = 1500;
+      right_motor_pwm = 1500;
+      vertical_motor_back_pwm = 1500;
+      vertical_motor_front_pwm = 1500;
+
+      top_motor.writeMicroseconds(1500);
+      bottom_motor.writeMicroseconds(1500);
+      right_motor.writeMicroseconds(1500);
+      left_motor.writeMicroseconds(1500);
+      front_motor.writeMicroseconds(1500);
+      back_motor.writeMicroseconds(1500);
     }
   }
 }
@@ -514,24 +509,6 @@ void AUV1_func()
     
     h_t = (atan2(points_lat[current_point] - lat, points_lon[current_point] - lon) * 180 / pi);
     dis = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
-
-    if (h_t >= 0)
-    {
-      if (h_t <= 90)
-        h_t = 90 - h_t;
-      else
-      {
-        h_t = h_t - 90;
-        h_t = -1 * h_t;
-      }
-    }
-    else
-    {
-      if (h_t < 0)
-        h_t = 90 + (-1 * h_t);
-      else
-        h_t = (-180 - h_t) + -90;
-    }
 
     if (dis < 1.5)
     {
@@ -566,6 +543,7 @@ void AUV1_func()
         current_point ++;
       }
     }
+     
 
     delta_h = h1 - h_t;
 
@@ -578,7 +556,7 @@ void AUV1_func()
     Serial.print(h_t, 2);
     Serial.print(", ");
     Serial.print(delta_h, 2);
-    // Serial.print(", ");
+    Serial.print(", ");
     // Serial.print(dis, 2);
     // Serial.print(", ");
 
@@ -746,6 +724,8 @@ void loop()
       if(tmp == "1")
       {
         jyro_state = JYRO_ENABLE;
+        allowed_pitch_angle = pitch;
+        allowed_yaw_angle = yaw;
         state = RESET;
       }
       else if(tmp == "2")
@@ -755,9 +735,9 @@ void loop()
       }
     }
   }
+  
+  send_data_to_operator();
 }
 
 
 // 318356933    543539085
-
-// 318359200    543542976
