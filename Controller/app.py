@@ -8,6 +8,9 @@ controller_thread_index = 0
 front_camera_thread_index = 1
 second_camera_thread_index = 2
 
+LED_front = 0
+LED_second = 0
+
 threads = {}
 
 controller = Controller()
@@ -146,6 +149,7 @@ class MainWindowClass(QWidget):
             self.ui.txt_show_status.setText(message)
 
     def motion_control(self, data):
+        global LED_front, LED_second
         try:
             print(data)
 
@@ -155,18 +159,19 @@ class MainWindowClass(QWidget):
             right_joy_2 = data[4]
 
             dandeh_key = 0
-
+            arrow_key = 0
+            start_select_key = 0
+            L_and_R = 0
+            
             match data[5]:
-                case 15:
-                    key = 0
                 case 31:
-                    key = 1
+                    dandeh_key = 1
                 case 47:
-                    key = 2
+                    dandeh_key = 2
                 case 79:
-                    key = 3
+                    dandeh_key = 3
                 case 143:
-                    key = 4
+                    dandeh_key = 4
                 case 0:
                     key = 5
                 case 2:
@@ -199,7 +204,11 @@ class MainWindowClass(QWidget):
                     key = 18
                 
 
-            data_send = {'1' : str(left_joy_1).zfill(3), '2' : str(left_joy_2).zfill(3), '3' : str(right_joy_1).zfill(3), '4' : str(right_joy_2).zfill(3), '5' : str(key).zfill(2)} 
+            data_send = {'1' : str(left_joy_1).zfill(3), '2' : str(left_joy_2).zfill(3),
+                          '3' : str(right_joy_1).zfill(3), '4' : str(right_joy_2).zfill(3),
+                          '5' : str(dandeh_key).zfill(2), '6' : str(arrow_key).zfill(2),
+                          '7' : str(start_select_key).zfill(2), '8' : str(L_and_R).zfill(2),
+                          '9' : str(LED_front).zfill(2), '10' : str(LED_second).zfill(2)}
             # print(data_send)
 
             # try:
