@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1120</width>
+    <width>1136</width>
     <height>630</height>
    </rect>
   </property>
@@ -691,14 +691,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="chb_secend_camera">
+       <widget class="QCheckBox" name="chb_second_camera">
         <property name="text">
          <string>Secend camera</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QSlider" name="sl_secend_led">
+       <widget class="QSlider" name="sl_second_led">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>

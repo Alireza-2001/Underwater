@@ -1,5 +1,6 @@
 import sys, json
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow
+from PyQt5 import uic
 from mainwindow import Ui_MainWindow
 from controller import ControllerThreadClass, Controller
 
@@ -15,31 +16,31 @@ threads = {}
 
 controller = Controller()
 
-class MainWindowClass(QWidget):
+class MainWindowClass(QMainWindow):
     def __init__(self):
-        super().__init__()
-
-        self.ui = Ui_MainWindow()
+        super(MainWindowClass, self).__init__()
+        # self.ui = Ui_MainWindow()
+        uic.loadUi('Controller/mainwindow.ui', self)
         self.set_style()
         self.setup_connection()
 
     def set_style(self):
-        self.ui.gp1.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.ui.gp2.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.ui.gp3.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.ui.gp4.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.ui.gp5.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.ui.gp6.setStyleSheet("QGroupBox { border: 1px solid blue;}")
+        self.gp1.setStyleSheet("QGroupBox { border: 1px solid blue;}")
+        self.gp2.setStyleSheet("QGroupBox { border: 1px solid blue;}")
+        self.gp3.setStyleSheet("QGroupBox { border: 1px solid blue;}")
+        self.gp4.setStyleSheet("QGroupBox { border: 1px solid blue;}")
+        self.gp5.setStyleSheet("QGroupBox { border: 1px solid blue;}")
+        self.gp6.setStyleSheet("QGroupBox { border: 1px solid blue;}")
 
     def setup_connection(self):
         #  Buttons click
-        self.ui.btn_controller_connect.clicked.connect(self.controller_connect)
-        self.ui.btn_controller_disconnect.clicked.connect(self.controller_disconnect)
-        self.ui.btn_socket_connect.clicked.connect(self.socket_connect)
-        self.ui.chb_front_camera.toggled.connect(self.chb_front_camera_toggled)
-        self.ui.chb_second_camera.toggled.connect(self.chb_second_camera_toggled)
-        self.ui.sl_front_led.valueChanged[int].connect(self.sl_front_led_changeValue)
-        self.ui.sl_second_led.valueChanged[int].connect(self.sl_second_led_changeValue)
+        self.btn_controller_connect.clicked.connect(self.controller_connect)
+        self.btn_controller_disconnect.clicked.connect(self.controller_disconnect)
+        self.btn_socket_connect.clicked.connect(self.socket_connect)
+        self.chb_front_camera.toggled.connect(self.chb_front_camera_toggled)
+        self.chb_second_camera.toggled.connect(self.chb_second_camera_toggled)
+        self.sl_front_led.valueChanged[int].connect(self.sl_front_led_changeValue)
+        self.sl_second_led.valueChanged[int].connect(self.sl_second_led_changeValue)
     
     def sl_front_led_changeValue(self, value):
         print(value)
@@ -141,11 +142,11 @@ class MainWindowClass(QWidget):
         message = str(data['message'])
 
         if status:
-            self.ui.txt_show_status.setStyleSheet("background : lightyellow; color : green")
-            self.ui.txt_show_status.setText(message)
+            self.txt_show_status.setStyleSheet("background : lightyellow; color : green")
+            self.txt_show_status.setText(message)
         else:
-            self.ui.txt_show_status.setStyleSheet("background : lightyellow; color : red")
-            self.ui.txt_show_status.setText(message)
+            self.txt_show_status.setStyleSheet("background : lightyellow; color : red")
+            self.txt_show_status.setText(message)
 
     def motion_control(self, data):
         global LED_front, LED_second
@@ -221,8 +222,10 @@ class MainWindowClass(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = Ui_MainWindow()
-    w = MainWindowClass()
-    ex.setupUi(w)
-    w.show()
+    mainWindow = MainWindowClass()
+    mainWindow.show()
     sys.exit(app.exec_())
+    # ex = Ui_MainWindow()
+    # w = MainWindowClass()
+    # ex.setupUi(w)
+    # w.show()
