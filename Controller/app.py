@@ -1,6 +1,6 @@
 import sys, json
 from PyQt5.QtWidgets import QApplication, QWidget
-from mainwindow import Ui_Dialog
+from mainwindow import Ui_MainWindow
 from controller import ControllerThreadClass, Controller
 
 
@@ -19,8 +19,7 @@ class MainWindowClass(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.ui = Ui_Dialog()
-        self.ui.setupUi(self)
+        self.ui = Ui_MainWindow()
         self.set_style()
         self.setup_connection()
 
@@ -222,6 +221,8 @@ class MainWindowClass(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    main_window = MainWindowClass()
-    main_window.show()
-    sys.exit(app.exec())
+    ex = Ui_MainWindow()
+    w = MainWindowClass()
+    ex.setupUi(w)
+    w.show()
+    sys.exit(app.exec_())
