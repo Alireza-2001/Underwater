@@ -1,1 +1,1 @@
- pyuic5 -x mainwinow.ui -o mainwindow.py   convert ui file to py file
+ pyuic5 -x mainwindow.ui -o mainwindow.py   convert ui file to py file
