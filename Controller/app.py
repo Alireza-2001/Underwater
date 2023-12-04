@@ -1,8 +1,9 @@
-import sys, json
+import sys, json, socket
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import uic
 from controller import ControllerThreadClass, Controller
 
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 controller_thread_index = 0
 front_camera_thread_index = 1
@@ -110,7 +111,7 @@ class MainWindowClass(QMainWindow):
     def socket_connect(self):
         global address, clientsocket, s
         ip = ""
-        port = 1024
+        port = 8000
         host = (ip, port)
         try:
             s.bind(host)

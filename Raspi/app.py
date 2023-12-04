@@ -16,11 +16,11 @@ except Exception as e:
 raspi_IP = '192.168.0.115'
 video_Port = 4000
 laptop_IP = '192.168.0.102'
-data_port = 1024
+data_port = 8000
 
 def socket_config():
     try:
-        s.connect((raspi_IP, data_port))
+        s.connect((laptop_IP, data_port))
     except Exception as e:
         print(e)
 
