@@ -210,12 +210,12 @@ class MainWindowClass(QMainWindow):
                           '5' : str(dandeh_key).zfill(1), '6' : str(arrow_key).zfill(1),
                           '7' : str(start_select_key).zfill(1), '8' : str(L_and_R).zfill(1),
                           '9' : str(LED_front).zfill(1), '10' : str(LED_second).zfill(1)}
-            print(data_send)
+            # print(data_send)
 
-            # try:
-                # clientsocket.send(bytes(json.dumps(data_send) + ">", "ascii"))
-            # except Exception as e:
-            #     print(e)
+            try:
+                clientsocket.send(bytes(json.dumps(data_send) + ">", "ascii"))
+            except Exception as e:
+                print(e)
 
         except Exception as e:
             self.show_messages({'status' : False, 'message' : str(e), 'data' : ''})
