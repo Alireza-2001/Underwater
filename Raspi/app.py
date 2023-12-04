@@ -31,10 +31,10 @@ def main():
 
     while True:
         try:
-            data = s.recv(60).decode("ascii")
-            if len(data) <= 60:
-                ser.write(bytes(data, "ascii"))
-                #print(data)
+            data = s.recv(120).decode("ascii")
+            if len(data) <= 109:
+                # ser.write(bytes(data, "ascii"))
+                print(data)
         except Exception as e:
             print(e)
 

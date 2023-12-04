@@ -1,5 +1,5 @@
 import sys, json
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import uic
 from controller import ControllerThreadClass, Controller
 
@@ -149,7 +149,7 @@ class MainWindowClass(QMainWindow):
     def motion_control(self, data):
         global LED_front, LED_second
         try:
-            print(data)
+            # print(data)
 
             left_joy_1 = data[0]
             left_joy_2 = data[1]
@@ -171,43 +171,46 @@ class MainWindowClass(QMainWindow):
                 case 143:
                     dandeh_key = 4
                 case 0:
-                    key = 5
+                    arrow_key = 1
                 case 2:
-                    key = 6
+                    arrow_key = 2
                 case 4:
-                    key = 7
+                    arrow_key = 3
                 case 6:
-                    key = 8
+                    arrow_key = 4
+                case _:
+                    dandeh_key = 0
+                    arrow_key = 0
                 
             match data[6]:
                 case 32:
-                    key = 9
+                    start_select_key = 1
                 case 16:
-                    key = 10
-                case 8:
-                    key = 11
-                case 4:
-                    key = 12
+                    start_select_key = 2
                 case 2:
-                    key = 13
+                    L_and_R = 1
+                case 8:
+                    L_and_R = 2
                 case 1:
-                    key = 14
+                    L_and_R = 3
+                case 4:
+                    L_and_R = 4
                 case 12:
-                    key = 15
+                    L_and_R = 5
                 case 3:
-                    key = 16
+                    L_and_R = 6
                 case 64:
-                    key = 17
+                    start_select_key = 3
                 case 128:
-                    key = 18
+                    start_select_key = 4
                 
 
             data_send = {'1' : str(left_joy_1).zfill(3), '2' : str(left_joy_2).zfill(3),
                           '3' : str(right_joy_1).zfill(3), '4' : str(right_joy_2).zfill(3),
-                          '5' : str(dandeh_key).zfill(2), '6' : str(arrow_key).zfill(2),
-                          '7' : str(start_select_key).zfill(2), '8' : str(L_and_R).zfill(2),
-                          '9' : str(LED_front).zfill(2), '10' : str(LED_second).zfill(2)}
-            # print(data_send)
+                          '5' : str(dandeh_key).zfill(1), '6' : str(arrow_key).zfill(1),
+                          '7' : str(start_select_key).zfill(1), '8' : str(L_and_R).zfill(1),
+                          '9' : str(LED_front).zfill(1), '10' : str(LED_second).zfill(1)}
+            print(data_send)
 
             # try:
                 # clientsocket.send(bytes(json.dumps(data_send) + ">", "ascii"))
