@@ -119,8 +119,6 @@ class MainWindowClass(QMainWindow):
 
             clientsocket, address = s.accept()
 
-            self.txt_ip.setText(address[0])
-            self.txt_port.setText(str(address[1]))
             data = {'status' : True, 'message' : f'connected to ip : {address[0]} and Port : {address[1]}', 'data' : ''}
             self.show_messages(data)
 

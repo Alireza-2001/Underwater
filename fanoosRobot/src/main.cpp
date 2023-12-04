@@ -7,8 +7,8 @@
 
 
 #define GPS_BAUDRATE 115200L
-#define PC_BAUDRATE 115200L
-#define RASPI_BAUDRATE 115200L
+#define PC_BAUDRATE 230400L
+#define RASPI_BAUDRATE 230400L
 
 #define ROV 1
 #define AUV 2
@@ -463,7 +463,7 @@ void ROV_func()
   if (Serial1.available() > 0)
   {
     String tmp = Serial1.readStringUntil('>');
-    if (tmp.length() == 59)
+    if (tmp.length() == 109)
     {
       deserializeJson(joystick, tmp);
       joy_front_back = 255 - int(joystick["1"]);

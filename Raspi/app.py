@@ -8,7 +8,7 @@ app=Flask(__name__)
 try:
     camera_1 = cv2.VideoCapture(0)
     camera_2 = cv2.VideoCapture(1)
-    ser = serial.Serial("/dev/ttyS0", baudrate = 115200, timeout=1)
+    ser = serial.Serial("/dev/ttyS0", baudrate = 230400, timeout=1)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 except Exception as e:
     print(e)
@@ -32,7 +32,7 @@ def main():
     while True:
         try:
             data = s.recv(120).decode("ascii")
-            if len(data) <= 109:
+            if len(data) == 110:
                 # ser.write(bytes(data, "ascii"))
                 print(data)
         except Exception as e:
