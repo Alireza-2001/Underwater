@@ -63,7 +63,7 @@ const int led_pin = 35;
 const double pi = 3.14159265358979323;
 const double radius_earth = 6371000.0;
 
-String data[13];
+String data[18];
 
 int gear = 1;
 float allowed_yaw_angle = 0;
@@ -94,16 +94,19 @@ float yaw = 0;
 
 double lat = 0.0;
 double lon = 0.0;
+int satellite_count = 0;
+double speed = 0.0;
 double points_lat [30];
 double points_lon [30];
 unsigned int points_time [30];
 int count_point = 0;
 int current_point = 0;
 
+float distance;
 double h1 = 0.0;
 double h_t = 0.0;
 double delta_h = 0.0;
-float dis = 0.0;
+float battery_voltage = 0.0;
 
 int state = RESET;
 int rov_state = 0;
@@ -169,24 +172,29 @@ void mpu_config()
 
 void send_data_to_operator()
 {
-  data[0] = String(yaw);
-  data[1] = String(roll);
-  data[2] = String(pitch);
+  data[0] = String(top_motor_pwm);
+  data[1] = String(bottom_motor_pwm);
+  data[2] = String(right_motor_pwm);
+  data[3] = String(left_motor_pwm);
+  data[4] = String(vertical_motor_front_pwm);
+  data[5] = String(vertical_motor_back_pwm);
 
-  data[3] = String(top_motor_pwm);
-  data[4] = String(bottom_motor_pwm);
-  data[5] = String(right_motor_pwm);
-  data[6] = String(left_motor_pwm);
-  data[7] = String(vertical_motor_front_pwm);
-  data[8] = String(vertical_motor_back_pwm);
+  data[6] = String(roll);
+  data[7] = String(pitch);
+  data[8] = String(yaw);
+  data[9] = String(jyro_state);
 
-  data[9] = String(gear);
+  data[10] = String(lat);
+  data[11] = String(lon);
+  data[12] = String(satellite_count);
+  data[13] = String(speed);
+  data[14] = String(distance);
+  data[15] = String(delta_h);
 
-  data[10] = String(allowed_yaw_angle);
-  data[11] = String(allowed_pitch_angle);
-  data[12] = String(jyro_state);
+  data[16] = String(gear);
+  data[17] = String(battery_voltage);
 
-  String tmp = data[0] + "," + data[1] + "," + data[2] + "," + data[3] + "," + data[4] + "," + data[5] + "," + data[6] + "," + data[7] + "," + data[8] + "," + data[9] + "," + data[10] + "," + data[11]+ "," + data[12];
+  String tmp = data[0] + "," + data[1] + "," + data[2] + "," + data[3] + "," + data[4] + "," + data[5] + "," + data[6] + "," + data[7] + "," + data[8] + "," + data[9] + "," + data[10] + "," + data[11]+ "," + data[12] + "," + data[13] + "," + data[14] + "," + data[15] + "," + data[16] + "," + data[17];
 
   Serial1.println(tmp);
 }
@@ -486,9 +494,9 @@ void AUV1_func()
     t1 = millis();
     
     h_t = (atan2(points_lat[current_point] - lat, points_lon[current_point] - lon) * 180 / pi);
-    dis = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
+    distance = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
 
-    if (dis < 1.5)
+    if (distance < 1.5)
     {
       if (current_point == count_point - 1)
       {
@@ -535,7 +543,7 @@ void AUV1_func()
     Serial.print(", ");
     Serial.print(delta_h, 2);
     Serial.print(", ");
-    // Serial.print(dis, 2);
+    // Serial.print(distance, 2);
     // Serial.print(", ");
 
     // if (delta_h < -10.0)
