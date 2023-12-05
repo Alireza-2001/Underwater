@@ -29,7 +29,6 @@ void motor_attach();
 void send_data_to_operator();
 void set_motor_pwm();
 void check_max_min_motor_pwm();
-void check_keys();
 void check_gear();
 void propulsion_controll(int min_pwm, int max_pwm);
 void up_down_controll(int min_pwm, int max_pwm);
@@ -79,8 +78,8 @@ int pitch_pwm_step = 0;
 int key_1 = 0;
 int joy_front_back = 128;
 int joy_left_right = 128;
-int joy_up_down = 128;
-int joy = 128;
+int joy_up_down_ver = 128;
+int joy_up_down_hor = 128;
 
 int right_motor_pwm = 1500;
 int left_motor_pwm = 1500;
@@ -166,7 +165,6 @@ void set_motor_pwm()
 void mpu_config()
 {
 
-
 }
 
 void send_data_to_operator()
@@ -195,7 +193,6 @@ void send_data_to_operator()
 
 void check_gear()
 {
-  // Dandeh 1: 1400 - 1600 2: 1300 - 1700 3: 1200 - 1800 4: 1100 - 1900
   switch (gear) {
     case 1:
       propulsion_controll(1400, 1600);
@@ -208,43 +205,6 @@ void check_gear()
       break;
     case 4:
       propulsion_controll(1100, 1900);
-      break;
-  }
-}
-
-void check_keys()
-{
-  // Dandeh 1: 1400 - 1600 2: 1300 - 1700 3: 1200 - 1800 4: 1100 - 1900
-  switch (key_1) {
-    case 1:
-      gear = 1;
-      break;
-    case 2:
-      gear = 2;
-      break;
-    case 3:
-      gear = 3;
-      break;
-    case 4:
-      gear = 4;
-      break;
-    case 5:
-      break;
-    case 7:
-      break;
-    case 9:
-      jyro_state = JYRO_ENABLE;
-      allowed_pitch_angle = pitch;
-      allowed_yaw_angle = yaw;
-      break;
-    case 10:
-      jyro_state = JYRO_DISABLE;
-      break;
-    case 17:
-      digitalWrite(led_pin, HIGH);
-      break;
-    case 18:
-      digitalWrite(led_pin, LOW);
       break;
   }
 }
@@ -338,47 +298,44 @@ void propulsion_controll(int min_pwm, int max_pwm)
 
 void up_down_controll(int min_pwm, int max_pwm)
 {
-  if (joy < 127 || joy > 128)
+  if (joy_up_down_hor < 127 || joy_up_down_hor > 128)
   {
-    vertical_motor_front_pwm = map(255 - joy, 255, 0, min_pwm, max_pwm) + 1;
-    vertical_motor_back_pwm = map(joy, 255, 0, min_pwm, max_pwm) + 1;
+    vertical_motor_front_pwm = map(255 - joy_up_down_hor, 255, 0, min_pwm, max_pwm) + 1;
+    vertical_motor_back_pwm = map(joy_up_down_hor, 255, 0, min_pwm, max_pwm) + 1;
     allowed_pitch_angle = pitch;
   }
 
-  if (joy < 130 && joy > 125)
+  if (joy_up_down_hor < 130 && joy_up_down_hor > 125)
   {
-    vertical_motor_front_pwm = map(joy_up_down, 0, 255, min_pwm, max_pwm) + 1;
-    vertical_motor_back_pwm = map(joy_up_down, 0, 255, min_pwm, max_pwm) + 1;
+    vertical_motor_front_pwm = map(joy_up_down_ver, 0, 255, min_pwm, max_pwm) + 1;
+    vertical_motor_back_pwm = map(joy_up_down_ver, 0, 255, min_pwm, max_pwm) + 1;
 
-    if(key_1 == 11)
+    switch (int(joystick["8"]))
     {
-      vertical_motor_front_pwm = 1350;
-      vertical_motor_back_pwm = 1350;
-    }
-    else if(key_1 == 12)
-    {
-      vertical_motor_front_pwm = 1300;
-      vertical_motor_back_pwm = 1300;
-    }
-    else if(key_1 == 15)
-    {
-      vertical_motor_front_pwm = 1100;
-      vertical_motor_back_pwm = 1100;
-    }
-    else if(key_1 == 13)
-    {
+    case 1:
       vertical_motor_front_pwm = 1600;
       vertical_motor_back_pwm = 1600;
-    }
-    else if(key_1 == 14)
-    {
+      break;
+    case 2:
+      vertical_motor_front_pwm = 1300;
+      vertical_motor_back_pwm = 1300;
+      break;
+    case 3:
       vertical_motor_front_pwm = 1750;
       vertical_motor_back_pwm = 1750;
-    }
-    else if(key_1 == 16)
-    {
+      break;
+    case 4:
+      vertical_motor_front_pwm = 1200;
+      vertical_motor_back_pwm = 1200;
+      break;
+    case 5:
+      vertical_motor_front_pwm = 1100;
+      vertical_motor_back_pwm = 1100;
+      break;
+    case 6:
       vertical_motor_front_pwm = 1900;
       vertical_motor_back_pwm = 1900;
+      break;
     }
 
     if (jyro_state == JYRO_ENABLE)
@@ -463,16 +420,37 @@ void ROV_func()
   if (Serial1.available() > 0)
   {
     String tmp = Serial1.readStringUntil('>');
-    if (tmp.length() == 109)
+    if (tmp.length() == 113)
     {
       deserializeJson(joystick, tmp);
-      joy_front_back = 255 - int(joystick["1"]);
-      joy_left_right = 255 - int(joystick["2"]);
-      joy_up_down = 255 - int(joystick["3"]);
-      joy = 255 - int(joystick["4"]);
-      key_1 = int(joystick["5"]);
+      joy_front_back = 255 - int(joystick["2"]);
+      joy_left_right = 255 - int(joystick["1"]);
+      joy_up_down_ver = 255 - int(joystick["4"]);
+      joy_up_down_hor = 255 - int(joystick["3"]);
 
-      check_keys();
+      if (int(joystick["5"]) != 0)
+      {
+        gear = int(joystick["5"]);
+      }
+
+      switch (int(joystick["7"]))
+      {
+      case 1:
+        jyro_state = JYRO_ENABLE;
+        allowed_pitch_angle = pitch;
+        allowed_yaw_angle = yaw;
+        break;
+      case 2:
+        jyro_state = JYRO_DISABLE;
+        break;
+      case 3:
+        digitalWrite(led_pin, HIGH);
+        break;
+      case 4:
+        digitalWrite(led_pin, LOW);
+        break;      
+      }
+      
       check_gear();
     }
   }
@@ -705,8 +683,7 @@ void loop()
           Serial.println("-----------------------------------------------");
         }
       }
-
-      if(auv1_run == 1)
+      else if(auv1_run == 1)
       {
         AUV1_func();
       }

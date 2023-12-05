@@ -32,7 +32,7 @@ def main():
     while True:
         try:
             data = s.recv(120).decode("ascii")
-            if len(data) == 110:
+            if len(data) == 114:
                 # ser.write(bytes(data, "ascii"))
                 print(data)
         except Exception as e:

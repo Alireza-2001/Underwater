@@ -42,10 +42,12 @@ class MainWindowClass(QMainWindow):
         self.sl_second_led.valueChanged[int].connect(self.sl_second_led_changeValue)
     
     def sl_front_led_changeValue(self, value):
-        print(value)
+        global LED_front
+        LED_front = value
 
     def sl_second_led_changeValue(self, value):
-        print(value)
+        global LED_second
+        LED_second = value
 
     def chb_front_camera_toggled(self):
         cbutton = self.sender()
@@ -208,7 +210,7 @@ class MainWindowClass(QMainWindow):
                           '3' : str(right_joy_1).zfill(3), '4' : str(right_joy_2).zfill(3),
                           '5' : str(dandeh_key).zfill(1), '6' : str(arrow_key).zfill(1),
                           '7' : str(start_select_key).zfill(1), '8' : str(L_and_R).zfill(1),
-                          '9' : str(LED_front).zfill(1), '10' : str(LED_second).zfill(1)}
+                          '9' : str(LED_front).zfill(3), '10' : str(LED_second).zfill(3)}
             # print(data_send)
 
             try:
