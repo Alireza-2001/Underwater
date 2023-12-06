@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <MPU6050_tockn.h>
 #include "Wire.h"
 #include <Servo.h>
 #include <ArduinoJson.h>
@@ -44,6 +45,7 @@ DynamicJsonDocument joystick(1024);
 DynamicJsonDocument setting(1024);
 
 UbxGpsNavPvt<HardwareSerial> gps(Serial2);
+MPU6050 mpu6050(Wire);
 
 Servo top_motor;
 Servo bottom_motor;
@@ -167,7 +169,10 @@ void set_motor_pwm()
 
 void mpu_config()
 {
-
+  Wire.begin();
+  mpu6050.begin();
+  mpu6050.calcGyroOffsets(true);
+  Serial.println();
 }
 
 void send_data_to_operator()
@@ -409,8 +414,6 @@ void update_gps()
     {
       h1 = -360 + h1;
     }
-
-    // Serial.println(h1);
   }
 }
 
@@ -530,7 +533,6 @@ void AUV1_func()
       }
     }
      
-
     delta_h = h1 - h_t;
 
     // Serial.print(lat / 10000000.0, 7);

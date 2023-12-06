@@ -10,11 +10,12 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 controller_thread_index = 0
 front_camera_thread_index = 1
 second_camera_thread_index = 2
+requests_thread_index = 3
 
 LED_front = 0
 LED_second = 0
 
-data_url = 'http://192.168.43.57:1000//library/v1.0/books'
+data_url = 'http://192.168.0.100:4000/fanoos/v1.0/data'
 
 threads = {}
 
@@ -26,16 +27,16 @@ class RequestsThreadClass(QtCore.QThread):
     message_signal = QtCore.pyqtSignal(dict)
 
     def __init__(self):
-        super(ControllerThreadClass, self).__init__()
+        super(RequestsThreadClass, self).__init__()
         self.is_running = True
-             
+    
     def run(self):
-        data = {'status' : True, 'message' : 'Starting controller thread...', 'data' : ''}
+        data = {'status' : True, 'message' : 'Starting Requests thread...', 'data' : ''}
         self.message_signal.emit(data)
         try:
             while (True):
-
-                self.any_signal.emit(self.report)
+                data = requests.get(data_url)
+                self.data_signal.emit(data.json())
                 sleep(0.2)
 
         except Exception as e:
@@ -45,7 +46,7 @@ class RequestsThreadClass(QtCore.QThread):
 
     def stop(self):
         self.is_running = False
-        data = {'status' : True, 'message' : 'Stopping RequestsThread...', 'data' : ''}
+        data = {'status' : True, 'message' : 'Stopping Requests thread...', 'data' : ''}
         self.message_signal.emit(data)
         self.terminate()
 
@@ -117,16 +118,16 @@ class MainWindowClass(QMainWindow):
 
         if controller_thread_index in threads:
             data = {'status' : False, 'message' : 'Controll is connected.', 'data' : ''}
-            # self.show_messages(data)
+            self.show_messages(data)
             return
         try:
             threads[controller_thread_index] = ControllerThreadClass(controller, parent=None)
             threads[controller_thread_index].start()
             threads[controller_thread_index].any_signal.connect(self.motion_control)
-            # threads[controller_thread_index].message_signal.connect(self.show_messages)
+            threads[controller_thread_index].message_signal.connect(self.show_messages)
         except Exception as e:
             data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
-            # self.show_messages(data)
+            self.show_messages(data)
             return
 
     def controller_disconnect(self):
@@ -155,6 +156,25 @@ class MainWindowClass(QMainWindow):
 
             clientsocket, address = s.accept()
 
+            try:
+                if requests_thread_index in threads:
+                    data = {'status' : False, 'message' : 'Controll is connected.', 'data' : ''}
+                    self.show_messages(data)
+                    return
+                try:
+                    threads[requests_thread_index] = RequestsThreadClass()
+                    threads[requests_thread_index].start()
+                    threads[requests_thread_index].data_signal.connect(self.show_data)
+                    threads[requests_thread_index].message_signal.connect(self.show_messages)
+                except Exception as e:
+                    data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
+                    self.show_messages(data)
+                    return
+            
+            except Exception as e:
+                data = {'status' : False, 'message' : str(e), 'data' : ''}
+                self.show_messages(data)
+
             data = {'status' : True, 'message' : f'connected to ip : {address[0]} and Port : {address[1]}', 'data' : ''}
             self.show_messages(data)
 
@@ -170,6 +190,32 @@ class MainWindowClass(QMainWindow):
 
         event.accept()
     
+    def show_data(self, data):
+        data = data['data']
+
+        self.lbl_right_motor.setText(data['motor']['right'])
+        self.lbl_left_motor.setText(data['motor']['left'])
+        self.lbl_top_motor.setText(data['motor']['top'])
+        self.lbl_bottom_motor.setText(data['motor']['bottom'])
+        self.lbl_back_motor.setText(data['motor']['back'])
+        self.lbl_front_motor.setText(data['motor']['front'])
+
+        self.lbl_roll.setText(data['jyro']['roll'])
+        self.lbl_pitch.setText(data['jyro']['pitch'])
+        self.lbl_yaw.setText(data['jyro']['yaw'])
+        self.lbl_jyro_state.setText(data['jyro']['state'])
+
+        self.lbl_lat.setText(data['gps']['lat'])
+        self.lbl_long.setText(data['gps']['lon'])
+        self.lbl_satallite.setText(data['gps']['satellite'])
+        self.lbl_speed.setText(data['gps']['speed'])
+        self.lbl_distance.setText(data['gps']['dis'])
+        self.lbl_angle.setText(data['gps']['angle'])
+
+
+        self.lbl_dande.setText(data['gear'])
+        self.lbl_vltage.setText(data['voltage'])
+                        
     def show_messages(self, data:dict):
         status = data['status']
         message = str(data['message'])

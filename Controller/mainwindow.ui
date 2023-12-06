@@ -321,7 +321,7 @@
        <string>Pitch :</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_19">
+     <widget class="QLabel" name="lbl_jyro_state">
       <property name="geometry">
        <rect>
         <x>240</x>
@@ -615,7 +615,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>1500</string>
+      <string>0.0</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_17">
@@ -641,7 +641,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>1500</string>
+      <string>1</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_18">

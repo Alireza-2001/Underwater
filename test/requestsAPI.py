@@ -8,4 +8,5 @@ while True:
     x = requests.get(data_url)
 
     print(x.text)
+
     sleep(0.5)
