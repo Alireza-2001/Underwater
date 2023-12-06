@@ -1,7 +1,9 @@
-import sys, json, socket
+import sys, json, socket, requests
 from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5 import uic
+from PyQt5 import uic, QtCore
 from controller import ControllerThreadClass, Controller
+from time import sleep
+
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -12,9 +14,41 @@ second_camera_thread_index = 2
 LED_front = 0
 LED_second = 0
 
+data_url = 'http://192.168.43.57:1000//library/v1.0/books'
+
 threads = {}
 
 controller = Controller()
+
+
+class RequestsThreadClass(QtCore.QThread):
+    data_signal = QtCore.pyqtSignal(dict)
+    message_signal = QtCore.pyqtSignal(dict)
+
+    def __init__(self):
+        super(ControllerThreadClass, self).__init__()
+        self.is_running = True
+             
+    def run(self):
+        data = {'status' : True, 'message' : 'Starting controller thread...', 'data' : ''}
+        self.message_signal.emit(data)
+        try:
+            while (True):
+
+                self.any_signal.emit(self.report)
+                sleep(0.2)
+
+        except Exception as e:
+            data = {'status' : False, 'message' : str(e), 'data' : ''}
+            self.message_signal.emit(data)
+            return
+
+    def stop(self):
+        self.is_running = False
+        data = {'status' : True, 'message' : 'Stopping RequestsThread...', 'data' : ''}
+        self.message_signal.emit(data)
+        self.terminate()
+
 
 class MainWindowClass(QMainWindow):
     def __init__(self):

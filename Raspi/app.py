@@ -1,7 +1,8 @@
-import socket, json, datetime, os, serial, cv2
+import socket, serial, cv2
 from flask import Flask, render_template, Response, jsonify
-from time import time, sleep
 from threading import Thread, main_thread
+
+
 
 app=Flask(__name__)
 
