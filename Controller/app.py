@@ -15,7 +15,7 @@ requests_thread_index = 3
 LED_front = 0
 LED_second = 0
 
-data_url = 'http://192.168.0.100:4000/fanoos/v1.0/data'
+data_url = 'http://192.168.0.115:4000/fanoos/v1.0/data'
 
 threads = {}
 
@@ -49,7 +49,6 @@ class RequestsThreadClass(QtCore.QThread):
         data = {'status' : True, 'message' : 'Stopping Requests thread...', 'data' : ''}
         self.message_signal.emit(data)
         self.terminate()
-
 
 class MainWindowClass(QMainWindow):
     def __init__(self):

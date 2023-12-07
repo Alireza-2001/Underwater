@@ -40,6 +40,8 @@ void AUV1_func();
 void AUV2_func();
 void start_menu();
 void ROV_func();
+void mpu_update();
+
 
 DynamicJsonDocument joystick(1024);
 DynamicJsonDocument setting(1024);
@@ -417,6 +419,14 @@ void update_gps()
   }
 }
 
+void mpu_update()
+{
+  mpu6050.update();
+  yaw = mpu6050.getAngleZ();
+  pitch = mpu6050.getAngleY();
+  roll = mpu6050.getAngleX();
+}
+
 void start_menu()
 {
   Serial.println(String(ROV) + " : ROV");
@@ -567,6 +577,7 @@ void AUV1_func()
 void loop()
 {
   update_gps();
+  mpu_update();
 
   if (state == RESET)
   {
