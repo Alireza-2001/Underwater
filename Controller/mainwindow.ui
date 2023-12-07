@@ -463,7 +463,9 @@
              </font>
             </property>
             <property name="styleSheet">
-             <string notr="true">color: rgb(225, 255, 29);</string>
+             <string notr="true">color: rgb(225, 255, 29);
+border-color: rgb(0, 0, 157);
+</string>
             </property>
             <property name="title">
              <string>Status of Engines</string>
@@ -479,7 +481,7 @@
               <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
+              <number>2</number>
              </property>
              <property name="spacing">
               <number>0</number>
@@ -765,7 +767,7 @@
               <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
+              <number>2</number>
              </property>
              <property name="spacing">
               <number>0</number>
@@ -984,7 +986,7 @@
               <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
+              <number>2</number>
              </property>
              <property name="spacing">
               <number>0</number>
