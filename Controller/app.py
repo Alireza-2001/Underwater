@@ -56,7 +56,7 @@ class MainWindowClass(QMainWindow):
     def __init__(self):
         super(MainWindowClass, self).__init__()
         uic.loadUi('Controller/mainwindow.ui', self)
-        self.set_style()
+        # self.set_style()
         self.setup_connection()
 
     def set_style(self):
