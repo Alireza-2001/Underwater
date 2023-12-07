@@ -1,7 +1,9 @@
 import sys, json, socket, requests
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import uic, QtCore
+from PyQt5.QtGui import QImage, QPixmap
 from controller import ControllerThreadClass, Controller
+from camera import CameraThreadClass
 from time import sleep
 
 
@@ -16,7 +18,7 @@ LED_front = 0
 LED_second = 0
 
 data_url = 'http://192.168.0.115:4000/fanoos/v1.0/data'
-
+camera_1_url = 'http://192.168.0.115:4000//video_feed_1'
 threads = {}
 
 controller = Controller()
@@ -145,40 +147,54 @@ class MainWindowClass(QMainWindow):
             self.show_messages(data)
 
     def socket_connect(self):
-        global address, clientsocket, s
-        ip = ""
-        port = 8000
-        host = (ip, port)
-        try:
-            s.bind(host)
-            s.listen()
+        # global address, clientsocket, s
+        # ip = ""
+        # port = 8000
+        # host = (ip, port)
+        # try:
+        #     s.bind(host)
+        #     s.listen()
 
-            clientsocket, address = s.accept()
+        #     clientsocket, address = s.accept()
 
-            try:
-                if requests_thread_index in threads:
-                    data = {'status' : False, 'message' : 'Controll is connected.', 'data' : ''}
-                    self.show_messages(data)
-                    return
-                try:
-                    threads[requests_thread_index] = RequestsThreadClass()
-                    threads[requests_thread_index].start()
-                    threads[requests_thread_index].data_signal.connect(self.show_data)
-                    threads[requests_thread_index].message_signal.connect(self.show_messages)
-                except Exception as e:
-                    data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
-                    self.show_messages(data)
-                    return
+        #     try:
+        #         if requests_thread_index in threads:
+        #             data = {'status' : False, 'message' : 'Controll is connected.', 'data' : ''}
+        #             self.show_messages(data)
+        #             return
+        #         try:
+        #             threads[requests_thread_index] = RequestsThreadClass()
+        #             threads[requests_thread_index].start()
+        #             threads[requests_thread_index].data_signal.connect(self.show_data)
+        #             threads[requests_thread_index].message_signal.connect(self.show_messages)
+        #         except Exception as e:
+        #             data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
+        #             self.show_messages(data)
+        #             return
             
-            except Exception as e:
-                data = {'status' : False, 'message' : str(e), 'data' : ''}
-                self.show_messages(data)
+        #     except Exception as e:
+        #         data = {'status' : False, 'message' : str(e), 'data' : ''}
+        #         self.show_messages(data)
 
-            data = {'status' : True, 'message' : f'connected to ip : {address[0]} and Port : {address[1]}', 'data' : ''}
+        #     data = {'status' : True, 'message' : f'connected to ip : {address[0]} and Port : {address[1]}', 'data' : ''}
+        #     self.show_messages(data)
+
+        # except Exception as e:
+        #     data = {'status' : False, 'message' : str(e), 'data' : ''}
+        #     self.show_messages(data)
+        
+
+        if front_camera_thread_index in threads:
+            data = {'status' : False, 'message' : 'camera thread is active.', 'data' : ''}
             self.show_messages(data)
-
+            return
+        try:
+            threads[front_camera_thread_index] = CameraThreadClass(url=camera_1_url)
+            threads[front_camera_thread_index].start()
+            threads[front_camera_thread_index].frame_signal.connect(self.display_main_video)
+            threads[front_camera_thread_index].message_signal.connect(self.show_messages)
         except Exception as e:
-            data = {'status' : False, 'message' : str(e), 'data' : ''}
+            data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
             self.show_messages(data)
     
     def closeEvent(self, event):
@@ -213,7 +229,7 @@ class MainWindowClass(QMainWindow):
 
 
         self.lbl_dande.setText(data['gear'])
-        self.lbl_vltage.setText(data['voltage'])
+        self.lbl_voltage.setText(data['voltage'])
                         
     def show_messages(self, data:dict):
         status = data['status']
@@ -299,8 +315,21 @@ class MainWindowClass(QMainWindow):
 
         except Exception as e:
             self.show_messages({'status' : False, 'message' : str(e), 'data' : ''})
+    
+    def display_main_video(self, img):
+        qformat = QImage.Format_Indexed8
 
+        if len(img.shape) == 3:
+            if (img.shape[2]) == 4:
+                qformat = QImage.Format_RGBA888
+            else:
+                qformat = QImage.Format_RGB888
+        
+        img = QImage(img, img.shape[1], img.shape[0], qformat)
+        img = img.rgbSwapped()
 
+        self.lbl_video_1.setPixmap(QPixmap.fromImage(img))
+    
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mainWindow = MainWindowClass()

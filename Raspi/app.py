@@ -13,7 +13,7 @@ try:
 except Exception as e:
     print(e)
 
-raspi_IP = '192.168.0.101'
+raspi_IP = '192.168.0.115'
 video_Port = 4000
 laptop_IP = '192.168.0.100'
 data_port = 8000
