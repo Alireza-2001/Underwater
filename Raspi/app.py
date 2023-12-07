@@ -7,7 +7,11 @@ app=Flask(__name__)
 
 try:
     camera_1 = cv2.VideoCapture(0)
+    camera_1.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
+    camera_1.set(cv2.CAP_PROP_FRAME_HEIGHT, 650)
     camera_2 = cv2.VideoCapture(1)
+    camera_2.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
+    camera_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 650)
     ser = serial.Serial("/dev/ttyS0", baudrate = 230400, timeout=1)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 except Exception as e:
