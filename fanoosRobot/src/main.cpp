@@ -9,7 +9,11 @@
 
 #define GPS_BAUDRATE 115200L
 #define PC_BAUDRATE 115200L
+<<<<<<< HEAD
 #define RASPI_BAUDRATE 115200
+=======
+#define RASPI_BAUDRATE 115200L
+>>>>>>> d162372a56765b9f769f8e056b4e94853126169f
 
 #define ROV 1
 #define AUV 2
