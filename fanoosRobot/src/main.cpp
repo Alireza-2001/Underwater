@@ -8,8 +8,8 @@
 
 
 #define GPS_BAUDRATE 115200L
-#define PC_BAUDRATE 230400L
-#define RASPI_BAUDRATE 230400L
+#define PC_BAUDRATE 115200L
+#define RASPI_BAUDRATE 115200
 
 #define ROV 1
 #define AUV 2
@@ -591,7 +591,7 @@ void AUV1_func()
 void loop()
 {
   update_gps();
-  mpu_update();
+  // mpu_update();
 
   if (state == RESET)
   {

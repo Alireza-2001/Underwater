@@ -198,10 +198,22 @@ class MainWindowClass(QMainWindow):
             self.show_messages(data)
     
     def closeEvent(self, event):
-        # if controller_thread_index in thread:
-        #     thread[controller_thread_index].stop()
-        #     thread.pop(controller_thread_index)
-        #     controller.gamepad.close()
+        if controller_thread_index in threads:
+            threads[controller_thread_index].stop()
+            threads.pop(controller_thread_index)
+            controller.gamepad.close()
+        
+        if front_camera_thread_index in threads:
+            threads[front_camera_thread_index].stop()
+            threads.pop(front_camera_thread_index)
+        
+        if second_camera_thread_index in threads:
+            threads[second_camera_thread_index].stop()
+            threads.pop(second_camera_thread_index)
+        
+        if requests_thread_index in threads:
+            threads[requests_thread_index].stop()
+            threads.pop(requests_thread_index)
 
         event.accept()
     
