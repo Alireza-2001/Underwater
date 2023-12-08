@@ -1,3 +1,13 @@
-a = {"1": "128", "2": "128", "3": "128", "4": "128", "5": "0", "6": "0", "7": "0", "8": "0", "9": "000", "10": "000"}
+values = [0, 0, 0, 0, 0]
 
-print(len(str(a)))
+for _ in range(20):
+    new_num = int(input("Enter Number"))
+
+    new_list = [0, 0, 0, 0, 0]
+    for i in range(4):
+        new_list[i] = list[i + 1]
+    new_list[4] = new_num
+
+    values = new_list
+
+    print()
