@@ -59,7 +59,7 @@ def main():
         try:
             data = s.recv(120).decode("ascii")
             if len(data) == 114:
-                # ser.write(bytes(data, "ascii"))
+                ser.write(bytes(data, "ascii"))
                 print(data)
         except Exception as e:
             print(e)

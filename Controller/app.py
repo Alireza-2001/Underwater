@@ -218,30 +218,32 @@ class MainWindowClass(QMainWindow):
         event.accept()
     
     def show_data(self, data):
-        data = data['data']
+        try:
+            data = data['data']
+            self.lbl_right_motor.setText(str(data['motor']['right']))
+            self.lbl_left_motor.setText(str(data['motor']['left']))
+            self.lbl_top_motor.setText(str(data['motor']['top']))
+            self.lbl_bottom_motor.setText(str(data['motor']['bottom']))
+            self.lbl_back_motor.setText(str(data['motor']['back']))
+            self.lbl_front_motor.setText(str(data['motor']['front']))
 
-        self.lbl_right_motor.setText(data['motor']['right'])
-        self.lbl_left_motor.setText(data['motor']['left'])
-        self.lbl_top_motor.setText(data['motor']['top'])
-        self.lbl_bottom_motor.setText(data['motor']['bottom'])
-        self.lbl_back_motor.setText(data['motor']['back'])
-        self.lbl_front_motor.setText(data['motor']['front'])
+            self.lbl_roll.setText(str(data['jyro']['roll']))
+            self.lbl_pitch.setText(str(data['jyro']['pitch']))
+            self.lbl_yaw.setText(str(data['jyro']['yaw']))
+            self.lbl_jyro_state.setText(str(data['jyro']['state']))
 
-        self.lbl_roll.setText(data['jyro']['roll'])
-        self.lbl_pitch.setText(data['jyro']['pitch'])
-        self.lbl_yaw.setText(data['jyro']['yaw'])
-        self.lbl_jyro_state.setText(data['jyro']['state'])
+            self.lbl_lat.setText(str(data['gps']['lat']))
+            self.lbl_long.setText(str(data['gps']['lon']))
+            self.lbl_satallite.setText(str(data['gps']['satellite']))
+            self.lbl_speed.setText(str(data['gps']['speed']))
+            self.lbl_distance.setText(str(data['gps']['dis']))
+            self.lbl_angle.setText(str(data['gps']['angle']))
 
-        self.lbl_lat.setText(data['gps']['lat'])
-        self.lbl_long.setText(data['gps']['lon'])
-        self.lbl_satallite.setText(data['gps']['satellite'])
-        self.lbl_speed.setText(data['gps']['speed'])
-        self.lbl_distance.setText(data['gps']['dis'])
-        self.lbl_angle.setText(data['gps']['angle'])
-
-
-        self.lbl_dande.setText(data['gear'])
-        self.lbl_voltage.setText(data['voltage'])
+            self.lbl_dande.setText(str(data['gear']))
+            self.lbl_voltage.setText(str(data['voltage']))
+            
+        except Exception as e:
+            self.show_messages({'status' : False, 'message' : str(e), 'data' : ''})
                         
     def show_messages(self, data:dict):
         status = data['status']
