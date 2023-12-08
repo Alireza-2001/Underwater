@@ -18,7 +18,9 @@ LED_front = 0
 LED_second = 0
 
 data_url = 'http://192.168.0.115:4000/fanoos/v1.0/data'
-camera_1_url = 'http://192.168.0.115:4000//video_feed_1'
+camera_1_url = 'http://192.168.0.115:4000/video_feed_1'
+camera_2_url = 'http://192.168.0.115:4000/video_feed_2'
+
 threads = {}
 
 controller = Controller()
@@ -147,41 +149,41 @@ class MainWindowClass(QMainWindow):
             self.show_messages(data)
 
     def socket_connect(self):
-        # global address, clientsocket, s
-        # ip = ""
-        # port = 8000
-        # host = (ip, port)
-        # try:
-        #     s.bind(host)
-        #     s.listen()
+        global address, clientsocket, s
+        ip = ""
+        port = 8000
+        host = (ip, port)
+        try:
+            s.bind(host)
+            s.listen()
 
-        #     clientsocket, address = s.accept()
+            clientsocket, address = s.accept()
 
-        #     try:
-        #         if requests_thread_index in threads:
-        #             data = {'status' : False, 'message' : 'Controll is connected.', 'data' : ''}
-        #             self.show_messages(data)
-        #             return
-        #         try:
-        #             threads[requests_thread_index] = RequestsThreadClass()
-        #             threads[requests_thread_index].start()
-        #             threads[requests_thread_index].data_signal.connect(self.show_data)
-        #             threads[requests_thread_index].message_signal.connect(self.show_messages)
-        #         except Exception as e:
-        #             data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
-        #             self.show_messages(data)
-        #             return
+            try:
+                if requests_thread_index in threads:
+                    data = {'status' : False, 'message' : 'Controll is connected.', 'data' : ''}
+                    self.show_messages(data)
+                    return
+                try:
+                    threads[requests_thread_index] = RequestsThreadClass()
+                    threads[requests_thread_index].start()
+                    threads[requests_thread_index].data_signal.connect(self.show_data)
+                    threads[requests_thread_index].message_signal.connect(self.show_messages)
+                except Exception as e:
+                    data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
+                    self.show_messages(data)
+                    return
             
-        #     except Exception as e:
-        #         data = {'status' : False, 'message' : str(e), 'data' : ''}
-        #         self.show_messages(data)
+            except Exception as e:
+                data = {'status' : False, 'message' : str(e), 'data' : ''}
+                self.show_messages(data)
 
-        #     data = {'status' : True, 'message' : f'connected to ip : {address[0]} and Port : {address[1]}', 'data' : ''}
-        #     self.show_messages(data)
+            data = {'status' : True, 'message' : f'connected to ip : {address[0]} and Port : {address[1]}', 'data' : ''}
+            self.show_messages(data)
 
-        # except Exception as e:
-        #     data = {'status' : False, 'message' : str(e), 'data' : ''}
-        #     self.show_messages(data)
+        except Exception as e:
+            data = {'status' : False, 'message' : str(e), 'data' : ''}
+            self.show_messages(data)
         
 
         if front_camera_thread_index in threads:

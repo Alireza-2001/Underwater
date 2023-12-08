@@ -131,8 +131,9 @@ void setup()
 
   pinMode(led_pin, OUTPUT);
 
-  mpu_config();  
+  
   motor_attach();
+  mpu_config();
   start_menu();
 }
 
@@ -156,7 +157,7 @@ void motor_attach()
   back_motor.attach(vertical_motor_back_pin);
   back_motor.writeMicroseconds(1500);
   
-  delay(7000);
+  delay(4000);
 }
 
 void set_motor_pwm()
@@ -403,22 +404,6 @@ double haversine_distance(double lat1, double lon1, double lat2, double lon2)
   return distance;
 }
 
-void update_gps()
-{
-  if (gps.ready())
-  {
-    lon = gps.lon;
-    lat = gps.lat;
-
-    h1 = gps.heading / 100000.0;
-
-    if (h1 > 180)
-    {
-      h1 = -360 + h1;
-    }
-  }
-}
-
 void mpu_update()
 {
   mpu6050.update();
@@ -500,13 +485,38 @@ void ROV_func()
   }
 }
 
+void update_gps()
+{
+  if (gps.ready())
+  {
+    lon = gps.lon;
+    lat = gps.lat;
+
+    h1 = gps.heading / 100000.0;
+
+    if (h1 > 180)
+    {
+      h1 = -360 + h1;
+    }
+
+    if (h1 < -90)
+    {
+      h1 = -1 * (h1 + 270);
+    }
+    else
+    {
+      h1 = 90 - h1;
+    }
+  }
+}
+
 void AUV1_func()
 {
   if (millis() - t1 > interval)
   {
     t1 = millis();
     
-    h_t = (atan2(points_lat[current_point] - lat, points_lon[current_point] - lon) * 180 / pi);
+    h_t = atan2(points_lat[current_point] - lat, points_lon[current_point] - lon) * 180 / pi;
     distance = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
 
     if (distance < 1.5)
@@ -542,35 +552,39 @@ void AUV1_func()
         current_point ++;
       }
     }
-     
-    delta_h = h1 - h_t;
+    else
+    {
+      delta_h = h1 - h_t;
 
-    // Serial.print(lat / 10000000.0, 7);
-    // Serial.print(", ");
-    // Serial.print(lon / 10000000.0, 7);
-    // Serial.print(", ");
-    Serial.print(h1, 2);
-    Serial.print(", ");
-    Serial.print(h_t, 2);
-    Serial.print(", ");
-    Serial.print(delta_h, 2);
-    Serial.print(", ");
-    // Serial.print(distance, 2);
-    // Serial.print(", ");
+      Serial.print(lat / 10000000.0, 7);
+      Serial.print(", ");
+      Serial.print(lon / 10000000.0, 7);
+      Serial.print(", ");
+      Serial.print(h1, 2);
+      Serial.print(", ");
+      Serial.print(h_t, 2);
+      Serial.print(", ");
+      Serial.print(delta_h, 2);
 
-    // if (delta_h < -10.0)
-    // {
-    //   Serial.print("Left");
-    // }
-    // else if (-10.0 <= delta_h && delta_h <= 10.0)
-    // {
-    //   Serial.print("Forward");
-    // }
-    // else if (delta_h > 10.0)
-    // {
-    //   Serial.print("Right");
-    // }
-    Serial.println();
+      
+      Serial.print(", ");
+      Serial.print(distance, 2);
+      Serial.print(", ");
+
+      if (delta_h < -10.0)
+      {
+        Serial.print("Left");
+      }
+      else if (-10.0 <= delta_h && delta_h <= 10.0)
+      {
+        Serial.print("Forward");
+      }
+      else if (delta_h > 10.0)
+      {
+        Serial.print("Right");
+      }
+      Serial.println();
+    }
   }
 }
 
@@ -739,3 +753,10 @@ void loop()
 
 
 // 318356933    543539085
+
+
+
+//  318365116    543544464
+//  318363418    543546447
+//  318359107    543543090
+//  318361053    543540153
