@@ -18,9 +18,7 @@ LED_front = 0
 LED_second = 0
 
 data_url = 'http://192.168.0.115:4000/fanoos/v1.0/data'
-camera_1_url = 'http://192.168.0.115:4000/video_feed_1'
-camera_2_url = 'http://192.168.0.115:4000/video_feed_2'
-
+camera_1_url = 'http://192.168.0.115:4000//video_feed_1'
 threads = {}
 
 controller = Controller()
@@ -58,7 +56,7 @@ class MainWindowClass(QMainWindow):
     def __init__(self):
         super(MainWindowClass, self).__init__()
         uic.loadUi('Controller/mainwindow.ui', self)
-        self.set_style()
+        # self.set_style()
         self.setup_connection()
 
     def set_style(self):
