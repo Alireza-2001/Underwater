@@ -21,20 +21,20 @@ class CameraThreadClass(QtCore.QThread):
     def run(self):
         data = {'status' : True, 'message' : 'Starting camera thread...', 'data' : ''}
         self.message_signal.emit(data)
-        try:
-            while (True):
+        while (True):
+            try:
                 ret, frame = self.cap.read()
                 if ret:
                     self.frame_signal.emit(frame)
 
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
+            except Exception as e:
+                data = {'status' : False, 'message' : str(e), 'data' : ''}
+                self.message_signal.emit(data)
 
-            self.cap.release()
-        except Exception as e:
-            data = {'status' : False, 'message' : str(e), 'data' : ''}
-            self.message_signal.emit(data)
-            return
+        self.cap.release()
+
 
     def stop(self):
         self.is_running = False

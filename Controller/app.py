@@ -19,8 +19,8 @@ LED_second = 0
 
 data_url = 'http://192.168.0.115:4000/fanoos/v1.0/data'
 camera_1_url = 'http://192.168.0.115:4000//video_feed_1'
-threads = {}
 
+threads = {}
 controller = Controller()
 
 
@@ -35,16 +35,15 @@ class RequestsThreadClass(QtCore.QThread):
     def run(self):
         data = {'status' : True, 'message' : 'Starting Requests thread...', 'data' : ''}
         self.message_signal.emit(data)
-        try:
-            while (True):
+        while (True):
+            try:
                 data = requests.get(data_url)
                 self.data_signal.emit(data.json())
                 sleep(0.2)
 
-        except Exception as e:
-            data = {'status' : False, 'message' : str(e), 'data' : ''}
-            self.message_signal.emit(data)
-            return
+            except Exception as e:
+                data = {'status' : False, 'message' : str(e), 'data' : ''}
+                self.message_signal.emit(data)
 
     def stop(self):
         self.is_running = False
@@ -226,6 +225,7 @@ class MainWindowClass(QMainWindow):
                 self.lbl_jyro_state.setText("Enable")
             elif str(data['jyro']['state']) == "31":
                 self.lbl_jyro_state.setText("Disable")
+            
             self.lbl_lat.setText(str(float(data['gps']['lat']) / 10000000))
             self.lbl_long.setText(str(float(data['gps']['lon']) / 10000000))
             self.lbl_satallite.setText(str(data['gps']['satellite']))
