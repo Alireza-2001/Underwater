@@ -55,17 +55,8 @@ class MainWindowClass(QMainWindow):
     def __init__(self):
         super(MainWindowClass, self).__init__()
         uic.loadUi('Controller/mainwindow.ui', self)
-        # self.set_style()
-        self.setWindowIcon("p_app.png")
+        self.setWindowIcon(QIcon('./Controller/p_app.png'))
         self.setup_connection()
-
-    def set_style(self):
-        self.gp1.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.gp2.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.gp3.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.gp4.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.gp5.setStyleSheet("QGroupBox { border: 1px solid blue;}")
-        self.gp6.setStyleSheet("QGroupBox { border: 1px solid blue;}")
 
     def setup_connection(self):
         #  Buttons click
@@ -87,11 +78,11 @@ class MainWindowClass(QMainWindow):
 
     def chb_front_camera_toggled(self):
         cbutton = self.sender()
-        print(str(cbutton.isChecked()))
+        # print(str(cbutton.isChecked()))
 
     def chb_second_camera_toggled(self):
         cbutton = self.sender()
-        print(str(cbutton.isChecked()))
+        # print(str(cbutton.isChecked()))
 
     def controller_connect(self):
         devices = controller.get_connected_device()
@@ -244,12 +235,14 @@ class MainWindowClass(QMainWindow):
         message = str(data['message'])
 
         if status:
+            current_row = self.txt_show_status.currentRow()
             self.txt_show_status.setStyleSheet("background : lightyellow; color : green")
-            self.txt_show_status.setText(message)
+            self.txt_show_status.insertItem(current_row+1, message)
         else:
+            current_row = self.txt_show_status.currentRow()
             self.txt_show_status.setStyleSheet("background : lightyellow; color : red")
-            self.txt_show_status.setText(message)
-
+            self.txt_show_status.insertItem(current_row+1, message)
+    
     def motion_control(self, data):
         global LED_front, LED_second
         try:

@@ -43,7 +43,7 @@ void ROV_func();
 void mpu_update();
 void motor_off();
 void read_voltage();
-
+void read_data_from_raspi();
 
 DynamicJsonDocument joystick(1024);
 DynamicJsonDocument setting(1024);
@@ -64,7 +64,11 @@ const int left_motor_pin = 5;
 const int right_motor_pin = 4;
 const int vertical_motor_front_pin = 7;
 const int vertical_motor_back_pin = 6;
-const int led_pin = 12;
+const int front_led_pin = 12;
+
+const float Vref = 4.8; 
+const float R1 = 36088; 
+const float R2 = 4700; 
 
 const int auv_base_pwm = 1750;
 
@@ -138,7 +142,8 @@ void setup()
   Serial1.begin(RASPI_BAUDRATE);
   gps.begin(GPS_BAUDRATE);
 
-  pinMode(led_pin, OUTPUT);
+  pinMode(front_led_pin, OUTPUT);
+  pinMode(A0,INPUT);
 
   motor_attach();
   mpu_config();
@@ -408,49 +413,13 @@ void start_menu()
 
 void read_voltage()
 {
-
+  battery_voltage = ((analogRead(0) * Vref) / 1024.0) / (R2 / (R1 + R2)); 
 }
 
 void ROV_func()
 {
-  if (Serial1.available() > 0)
-  {
-    String tmp = Serial1.readStringUntil('>');
-
-    if (tmp.length() == 113)
-    {
-      deserializeJson(joystick, tmp);
-      joy_front_back = 255 - int(joystick["2"]);
-      joy_left_right = 255 - int(joystick["1"]);
-      joy_up_down_ver = 255 - int(joystick["4"]);
-      joy_up_down_hor = 255 - int(joystick["3"]);
-
-      if (int(joystick["5"]) != 0)
-      {
-        gear = int(joystick["5"]);
-      }
-
-      switch (int(joystick["7"]))
-      {
-        case 1:
-          jyro_state = JYRO_ENABLE;
-          allowed_pitch_angle = pitch;
-          allowed_yaw_angle = yaw;
-          break;
-        case 2:
-          jyro_state = JYRO_DISABLE;
-          break;
-        case 3:
-          digitalWrite(led_pin, HIGH);
-          break;
-        case 4:
-          digitalWrite(led_pin, LOW);
-          break;      
-      }
-      
-      check_gear();
-    }
-  }
+  check_gear();
+  
   if(Serial.available() > 0)
   {
     String tmp = Serial.readString();
@@ -651,10 +620,54 @@ void motor_off()
   set_motor_pwm();
 }
 
+void read_data_from_raspi()
+{
+ if (Serial1.available() > 0)
+  {
+    String tmp = Serial1.readStringUntil('>');
+
+    if (tmp.length() == 113)
+    {
+      deserializeJson(joystick, tmp);
+      joy_front_back = 255 - int(joystick["2"]);
+      joy_left_right = 255 - int(joystick["1"]);
+      joy_up_down_ver = 255 - int(joystick["4"]);
+      joy_up_down_hor = 255 - int(joystick["3"]);
+
+      if (int(joystick["5"]) != 0)
+      {
+        gear = int(joystick["5"]);
+      }
+
+      switch (int(joystick["7"]))
+      {
+        case 1:
+          jyro_state = JYRO_ENABLE;
+          allowed_pitch_angle = pitch;
+          allowed_yaw_angle = yaw;
+          break;
+        case 2:
+          jyro_state = JYRO_DISABLE;
+          break;
+        case 3:
+          digitalWrite(front_led_pin, HIGH);
+          break;
+        case 4:
+          digitalWrite(front_led_pin, LOW);
+          break;      
+      }
+
+      analogWrite(front_led_pin, int(joystick["9"]));
+
+    }
+  }
+}
+
 void loop()
 {
   update_gps();
   mpu_update();
+  read_data_from_raspi();
 
   if (state == RESET)
   {
