@@ -1,7 +1,7 @@
 import sys, json, socket, requests
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5 import uic, QtCore
-from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtGui import QImage, QPixmap, QIcon
 from controller import ControllerThreadClass, Controller
 from camera import CameraThreadClass
 from time import sleep
@@ -57,6 +57,7 @@ class MainWindowClass(QMainWindow):
         super(MainWindowClass, self).__init__()
         uic.loadUi('Controller/mainwindow.ui', self)
         # self.set_style()
+        self.setWindowIcon(QIcon(""))
         self.setup_connection()
 
     def set_style(self):
