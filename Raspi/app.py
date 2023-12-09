@@ -70,33 +70,32 @@ def serial_recived_data():
     while True:
         try:
             data = ser.readline()
-            if data:
-                data = data.decode("utf-8").split(",")
-                if len(data) == 18:
-                    print(data)
-                    top_motor = data[0]
-                    bottom_motor = data[1]
-                    right_motor = data[2]
-                    left_motor = data[3]
-                    front_motor = data[4]
-                    back_motor = data[5]
+            data = data.decode("utf-8").split(",")
+            if len(data) == 18:
+                print(data)
+                top_motor = data[0]
+                bottom_motor = data[1]
+                right_motor = data[2]
+                left_motor = data[3]
+                front_motor = data[4]
+                back_motor = data[5]
 
-                    roll = data[6]
-                    pitch = data[7]
-                    yaw = data[8]
-                    jyro_state = data[9]
+                roll = data[6]
+                pitch = data[7]
+                yaw = data[8]
+                jyro_state = data[9]
 
-                    lat = data[10]
-                    lon = data[11]
-                    satellite = data[12]
-                    speed = data[13]
-                    distance = data[14]
-                    angle = data[15]
+                lat = data[10]
+                lon = data[11]
+                satellite = data[12]
+                speed = data[13]
+                distance = data[14]
+                angle = data[15]
 
-                    gear = data[16]
-                    battery_voltage = data[17]
+                gear = data[16]
+                battery_voltage = data[17]
 
-                    #print(data)
+                #print(data)
                     
         except Exception as e:
             print(e)
