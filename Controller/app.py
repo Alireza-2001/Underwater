@@ -57,7 +57,7 @@ class MainWindowClass(QMainWindow):
         super(MainWindowClass, self).__init__()
         uic.loadUi('Controller/mainwindow.ui', self)
         # self.set_style()
-        self.setWindowIcon(QIcon(""))
+        self.setWindowIcon("p_app.png")
         self.setup_connection()
 
     def set_style(self):
