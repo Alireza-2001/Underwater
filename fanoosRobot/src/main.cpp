@@ -9,11 +9,7 @@
 
 #define GPS_BAUDRATE 115200L
 #define PC_BAUDRATE 115200L
-<<<<<<< HEAD
-#define RASPI_BAUDRATE 115200
-=======
-#define RASPI_BAUDRATE 115200L
->>>>>>> d162372a56765b9f769f8e056b4e94853126169f
+#define RASPI_BAUDRATE 250000L
 
 #define ROV 1
 #define AUV 2
@@ -45,6 +41,8 @@ void AUV2_func();
 void start_menu();
 void ROV_func();
 void mpu_update();
+void motor_off();
+void read_voltage();
 
 
 DynamicJsonDocument joystick(1024);
@@ -66,12 +64,12 @@ const int left_motor_pin = 5;
 const int right_motor_pin = 4;
 const int vertical_motor_front_pin = 7;
 const int vertical_motor_back_pin = 6;
-const int led_pin = 35;
+const int led_pin = 12;
+
+const int auv_base_pwm = 1750;
 
 const double pi = 3.14159265358979323;
 const double radius_earth = 6371000.0;
-
-String data[18];
 
 int gear = 1;
 float allowed_yaw_angle = 0;
@@ -83,7 +81,6 @@ int pwm_step = 40;
 int yaw_pwm_step = 0;
 int pitch_pwm_step = 0;
 
-int key_1 = 0;
 int joy_front_back = 128;
 int joy_left_right = 128;
 int joy_up_down_ver = 128;
@@ -99,6 +96,14 @@ int vertical_motor_back_pwm = 1500;
 float roll = 0;
 float pitch = 0;
 float yaw = 0;
+
+float k = 1.5;
+double lat_filter[10];
+double lon_filter[10];
+double new_list_lat[10];
+double new_list_lon[10];
+double sum_lat = 0.0;
+double sum_lon = 0.0;
 
 double lat = 0.0;
 double lon = 0.0;
@@ -135,7 +140,6 @@ void setup()
 
   pinMode(led_pin, OUTPUT);
 
-  
   motor_attach();
   mpu_config();
   start_menu();
@@ -166,6 +170,7 @@ void motor_attach()
 
 void set_motor_pwm()
 {
+  check_max_min_motor_pwm();
   top_motor.writeMicroseconds(top_motor_pwm);
   bottom_motor.writeMicroseconds(bottom_motor_pwm);
   right_motor.writeMicroseconds(right_motor_pwm);
@@ -184,29 +189,7 @@ void mpu_config()
 
 void send_data_to_operator()
 {
-  data[0] = String(top_motor_pwm);
-  data[1] = String(bottom_motor_pwm);
-  data[2] = String(right_motor_pwm);
-  data[3] = String(left_motor_pwm);
-  data[4] = String(vertical_motor_front_pwm);
-  data[5] = String(vertical_motor_back_pwm);
-
-  data[6] = String(roll);
-  data[7] = String(pitch);
-  data[8] = String(yaw);
-  data[9] = String(jyro_state);
-
-  data[10] = String(lat);
-  data[11] = String(lon);
-  data[12] = String(satellite_count);
-  data[13] = String(speed);
-  data[14] = String(distance);
-  data[15] = String(delta_h);
-
-  data[16] = String(gear);
-  data[17] = String(battery_voltage);
-
-  String tmp = data[0] + "," + data[1] + "," + data[2] + "," + data[3] + "," + data[4] + "," + data[5] + "," + data[6] + "," + data[7] + "," + data[8] + "," + data[9] + "," + data[10] + "," + data[11]+ "," + data[12] + "," + data[13] + "," + data[14] + "," + data[15] + "," + data[16] + "," + data[17];
+  String tmp = String(top_motor_pwm) + "," + String(bottom_motor_pwm) + "," + String(right_motor_pwm) + "," + String(left_motor_pwm) + "," + String(vertical_motor_front_pwm) + "," + String(vertical_motor_back_pwm) + "," + String(roll) + "," + String(pitch) + "," + String(yaw) + "," + String(jyro_state) + "," + String(lat) + "," + String(lon)+ "," + String(satellite_count) + "," + String(speed) + "," + String(distance) + "," + String(delta_h) + "," + String(gear) + "," + String(battery_voltage);
 
   Serial1.println(tmp);
 }
@@ -310,8 +293,6 @@ void propulsion_controll(int min_pwm, int max_pwm)
   }
 
   up_down_controll(1100, 1900);
-
-  check_max_min_motor_pwm();
 
   set_motor_pwm();
 }
@@ -425,11 +406,17 @@ void start_menu()
   Serial.println("-----------------------------------------------");
 }
 
+void read_voltage()
+{
+
+}
+
 void ROV_func()
 {
   if (Serial1.available() > 0)
   {
     String tmp = Serial1.readStringUntil('>');
+
     if (tmp.length() == 113)
     {
       deserializeJson(joystick, tmp);
@@ -445,20 +432,20 @@ void ROV_func()
 
       switch (int(joystick["7"]))
       {
-      case 1:
-        jyro_state = JYRO_ENABLE;
-        allowed_pitch_angle = pitch;
-        allowed_yaw_angle = yaw;
-        break;
-      case 2:
-        jyro_state = JYRO_DISABLE;
-        break;
-      case 3:
-        digitalWrite(led_pin, HIGH);
-        break;
-      case 4:
-        digitalWrite(led_pin, LOW);
-        break;      
+        case 1:
+          jyro_state = JYRO_ENABLE;
+          allowed_pitch_angle = pitch;
+          allowed_yaw_angle = yaw;
+          break;
+        case 2:
+          jyro_state = JYRO_DISABLE;
+          break;
+        case 3:
+          digitalWrite(led_pin, HIGH);
+          break;
+        case 4:
+          digitalWrite(led_pin, LOW);
+          break;      
       }
       
       check_gear();
@@ -493,8 +480,29 @@ void update_gps()
 {
   if (gps.ready())
   {
-    lon = gps.lon;
-    lat = gps.lat;
+    for (int i = 0; i < 9; i++)
+    {
+      lat_filter[i] = lat_filter[i + 1];
+      lat_filter[9] = gps.lat;
+    }
+    sum_lat = 0.0;
+    for (int i = 0; i < 10; i++)
+    {
+      sum_lat = sum_lat + lat_filter[i];
+    }
+    lat = sum_lat / 10;
+
+    for (int i = 0; i < 9; i++)
+    {
+      lon_filter[i] = lon_filter[i + 1];
+      lon_filter[9] = gps.lon;
+    }
+    sum_lon = 0.0;
+    for (int i = 0; i < 10; i++)
+    {
+      sum_lon = sum_lon + lon_filter[i];
+    }
+    lon = sum_lon / 10;
 
     h1 = gps.heading / 100000.0;
 
@@ -527,13 +535,16 @@ void AUV1_func()
     {
       if (current_point == count_point - 1)
       {
+        motor_off();
         Serial.println("Finished.");
         auv_state = AUV_STOP;
         state = RESET;
+        auv1_run = 0;
         start_menu();
       }
       else
       {
+        motor_off();
         Serial.println("Target " + String(current_point + 1));
         Serial.println("1 : run");
         t2 = millis();
@@ -560,6 +571,15 @@ void AUV1_func()
     {
       delta_h = h1 - h_t;
 
+      if (delta_h > 180)
+      {
+        delta_h = 360 - delta_h;
+      }
+      else if (delta_h < -180)
+      {
+        delta_h = 360 - abs(delta_h);        
+      }
+
       Serial.print(lat / 10000000.0, 7);
       Serial.print(", ");
       Serial.print(lon / 10000000.0, 7);
@@ -569,36 +589,77 @@ void AUV1_func()
       Serial.print(h_t, 2);
       Serial.print(", ");
       Serial.print(delta_h, 2);
-
-      
       Serial.print(", ");
       Serial.print(distance, 2);
       Serial.print(", ");
 
       if (delta_h < -10.0)
       {
+        float dif = abs(delta_h + 10);
+
+        int coefficient_pwm = int(dif * k);
+
+        right_motor_pwm = auv_base_pwm + coefficient_pwm;
+        left_motor_pwm = auv_base_pwm - coefficient_pwm;
         Serial.print("Left");
+
+        Serial.print(", ");
+        Serial.print(left_motor_pwm);
+        Serial.print(", ");
+        Serial.print(right_motor_pwm);
       }
       else if (-10.0 <= delta_h && delta_h <= 10.0)
       {
         Serial.print("Forward");
+        right_motor_pwm = auv_base_pwm;
+        left_motor_pwm = auv_base_pwm;
+
+        Serial.print(", ");
+        Serial.print(left_motor_pwm);
+        Serial.print(", ");
+        Serial.print(right_motor_pwm);
       }
       else if (delta_h > 10.0)
       {
+        float dif = abs(delta_h - 10);
+
+        int coefficient_pwm = int(dif * k);
+
+        right_motor_pwm = auv_base_pwm - coefficient_pwm;
+        left_motor_pwm = auv_base_pwm + coefficient_pwm;
         Serial.print("Right");
+
+        Serial.print(", ");
+        Serial.print(left_motor_pwm);
+        Serial.print(", ");
+        Serial.print(right_motor_pwm);
       }
       Serial.println();
     }
+    set_motor_pwm();
   }
+}
+
+void motor_off()
+{
+  right_motor_pwm = 1500;
+  left_motor_pwm = 1500;
+  top_motor_pwm = 1500;
+  bottom_motor_pwm = 1500;
+  vertical_motor_back_pwm = 1500;
+  vertical_motor_front_pwm = 1500;
+  set_motor_pwm();
 }
 
 void loop()
 {
   update_gps();
-  // mpu_update();
+  mpu_update();
 
   if (state == RESET)
   {
+    motor_off();
+
     if (Serial.available() > 0)
     {
       String tmp = Serial.readString();
@@ -752,15 +813,11 @@ void loop()
     }
   }
   
+  read_voltage();
   send_data_to_operator();
 }
 
 
-// 318356933    543539085
-
-
-
-//  318365116    543544464
-//  318363418    543546447
-//  318359107    543543090
-//  318361053    543540153
+//  318356933    543539085
+//  318361053    543540306
+//  318356552    543541297

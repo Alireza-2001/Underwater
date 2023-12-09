@@ -7,12 +7,12 @@ app=Flask(__name__)
 
 try:
     camera_1 = cv2.VideoCapture(0)
-    camera_1.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
-    camera_1.set(cv2.CAP_PROP_FRAME_HEIGHT, 650)
+    camera_1.set(cv2.CAP_PROP_FRAME_WIDTH, 880)
+    camera_1.set(cv2.CAP_PROP_FRAME_HEIGHT, 495)
     camera_2 = cv2.VideoCapture(1)
     camera_2.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
     camera_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 650)
-    ser = serial.Serial("/dev/ttyS0", baudrate = 115200, timeout=1)
+    ser = serial.Serial("/dev/ttyS0", baudrate = 250000)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 except Exception as e:
     print(e)
@@ -57,10 +57,10 @@ def main():
 
     while True:
         try:
-            data = s.recv(120).decode("ascii")
+            data = s.recv(114).decode("ascii")
             if len(data) == 114:
                 ser.write(bytes(data, "ascii"))
-                print(data)
+                #print(data)
         except Exception as e:
             print(e)
 
@@ -73,6 +73,7 @@ def serial_recived_data():
             if data:
                 data = data.decode("utf-8").split(",")
                 if len(data) == 18:
+                    print(data)
                     top_motor = data[0]
                     bottom_motor = data[1]
                     right_motor = data[2]
@@ -95,7 +96,8 @@ def serial_recived_data():
                     gear = data[16]
                     battery_voltage = data[17]
 
-                    # print(data)
+                    #print(data)
+                    
         except Exception as e:
             print(e)
 
@@ -122,7 +124,7 @@ def gen_frames_2():
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route("/fanoos/v1.0/data", methods=["GET"])
-def get_books():
+def get_data():
     data = {
         'motor' : {
             'top' : top_motor,
@@ -149,6 +151,7 @@ def get_books():
         'gear' : gear,
         'voltage' : battery_voltage
     }
+    print(data)
     return jsonify({"data": data})
 
 @app.route('/1')

@@ -154,28 +154,7 @@ class MainWindowClass(QMainWindow):
         try:
             s.bind(host)
             s.listen()
-
             clientsocket, address = s.accept()
-
-            try:
-                if requests_thread_index in threads:
-                    data = {'status' : False, 'message' : 'Controll is connected.', 'data' : ''}
-                    self.show_messages(data)
-                    return
-                try:
-                    threads[requests_thread_index] = RequestsThreadClass()
-                    threads[requests_thread_index].start()
-                    threads[requests_thread_index].data_signal.connect(self.show_data)
-                    threads[requests_thread_index].message_signal.connect(self.show_messages)
-                except Exception as e:
-                    data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
-                    self.show_messages(data)
-                    return
-            
-            except Exception as e:
-                data = {'status' : False, 'message' : str(e), 'data' : ''}
-                self.show_messages(data)
-
             data = {'status' : True, 'message' : f'connected to ip : {address[0]} and Port : {address[1]}', 'data' : ''}
             self.show_messages(data)
 
@@ -183,11 +162,23 @@ class MainWindowClass(QMainWindow):
             data = {'status' : False, 'message' : str(e), 'data' : ''}
             self.show_messages(data)
         
+        if requests_thread_index in threads:
+            data = {'status' : False, 'message' : 'Controll is connected.', 'data' : ''}
+            self.show_messages(data)
+
+        try:
+            threads[requests_thread_index] = RequestsThreadClass()
+            threads[requests_thread_index].start()
+            threads[requests_thread_index].data_signal.connect(self.show_data)
+            threads[requests_thread_index].message_signal.connect(self.show_messages)
+        except Exception as e:
+            data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
+            self.show_messages(data)
 
         if front_camera_thread_index in threads:
             data = {'status' : False, 'message' : 'camera thread is active.', 'data' : ''}
             self.show_messages(data)
-            return
+
         try:
             threads[front_camera_thread_index] = CameraThreadClass(url=camera_1_url)
             threads[front_camera_thread_index].start()
@@ -230,10 +221,12 @@ class MainWindowClass(QMainWindow):
             self.lbl_roll.setText(str(data['jyro']['roll']))
             self.lbl_pitch.setText(str(data['jyro']['pitch']))
             self.lbl_yaw.setText(str(data['jyro']['yaw']))
-            self.lbl_jyro_state.setText(str(data['jyro']['state']))
-
-            self.lbl_lat.setText(str(data['gps']['lat']))
-            self.lbl_long.setText(str(data['gps']['lon']))
+            if str(data['jyro']['state']) == "30":
+                self.lbl_jyro_state.setText("Enable")
+            elif str(data['jyro']['state']) == "31":
+                self.lbl_jyro_state.setText("Disable")
+            self.lbl_lat.setText(str(float(data['gps']['lat']) / 10000000))
+            self.lbl_long.setText(str(float(data['gps']['lon']) / 10000000))
             self.lbl_satallite.setText(str(data['gps']['satellite']))
             self.lbl_speed.setText(str(data['gps']['speed']))
             self.lbl_distance.setText(str(data['gps']['dis']))
@@ -320,12 +313,11 @@ class MainWindowClass(QMainWindow):
                           '5' : str(dandeh_key).zfill(1), '6' : str(arrow_key).zfill(1),
                           '7' : str(start_select_key).zfill(1), '8' : str(L_and_R).zfill(1),
                           '9' : str(LED_front).zfill(3), '10' : str(LED_second).zfill(3)}
+
+
             # print(data_send)
 
-            try:
-                clientsocket.send(bytes(json.dumps(data_send) + ">", "ascii"))
-            except Exception as e:
-                print(e)
+            clientsocket.send(bytes(json.dumps(data_send ) + ">", "ascii"))
 
         except Exception as e:
             self.show_messages({'status' : False, 'message' : str(e), 'data' : ''})
