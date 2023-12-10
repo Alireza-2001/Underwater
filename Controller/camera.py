@@ -12,8 +12,8 @@ class CameraThreadClass(QtCore.QThread):
         self.url = url
         try:
             self.cap = cv2.VideoCapture(url)
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 650)
+            # self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+            # self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
         except Exception as e:
             data = {'status' : False, 'message' : str(e), 'data' : ''}
             self.message_signal.emit(data)           

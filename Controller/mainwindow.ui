@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1213</width>
-    <height>690</height>
+    <width>1581</width>
+    <height>906</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -140,7 +140,7 @@
                <property name="title">
                 <string>Caption BOX</string>
                </property>
-               <layout class="QGridLayout" name="gridLayout_9" columnstretch="1,3,12">
+               <layout class="QGridLayout" name="gridLayout_9" columnstretch="3,6,25">
                 <property name="leftMargin">
                  <number>0</number>
                 </property>
@@ -204,8 +204,23 @@
                   <property name="frameShadow">
                    <enum>QFrame::Raised</enum>
                   </property>
-                  <layout class="QGridLayout" name="gridLayout_11">
-                   <item row="0" column="0">
+                  <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="2,3">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>4</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item>
                     <widget class="QLabel" name="label_17">
                      <property name="font">
                       <font>
@@ -219,18 +234,37 @@
                      </property>
                     </widget>
                    </item>
-                   <item row="0" column="1">
-                    <widget class="QLabel" name="lbl_voltage">
-                     <property name="font">
-                      <font>
-                       <family>Sahel SemiBold</family>
-                       <pointsize>10</pointsize>
-                       <bold>true</bold>
-                      </font>
+                   <item>
+                    <widget class="QFrame" name="frame_19">
+                     <property name="frameShape">
+                      <enum>QFrame::StyledPanel</enum>
                      </property>
-                     <property name="text">
-                      <string>00.00</string>
+                     <property name="frameShadow">
+                      <enum>QFrame::Raised</enum>
                      </property>
+                     <widget class="QLabel" name="lbl_voltage">
+                      <property name="geometry">
+                       <rect>
+                        <x>10</x>
+                        <y>0</y>
+                        <width>71</width>
+                        <height>71</height>
+                       </rect>
+                      </property>
+                      <property name="font">
+                       <font>
+                        <family>Sahel SemiBold</family>
+                        <pointsize>10</pointsize>
+                        <bold>true</bold>
+                       </font>
+                      </property>
+                      <property name="text">
+                       <string>00.00</string>
+                      </property>
+                      <property name="margin">
+                       <number>0</number>
+                      </property>
+                     </widget>
                     </widget>
                    </item>
                   </layout>

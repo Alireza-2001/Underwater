@@ -112,7 +112,7 @@ double sum_lon = 0.0;
 double lat = 0.0;
 double lon = 0.0;
 int satellite_count = 0;
-double speed = 0.0;
+float speed = 0.0;
 double points_lat [30];
 double points_lon [30];
 unsigned int points_time [30];
@@ -194,7 +194,7 @@ void mpu_config()
 
 void send_data_to_operator()
 {
-  String tmp = String(top_motor_pwm) + "," + String(bottom_motor_pwm) + "," + String(right_motor_pwm) + "," + String(left_motor_pwm) + "," + String(vertical_motor_front_pwm) + "," + String(vertical_motor_back_pwm) + "," + String(roll) + "," + String(pitch) + "," + String(yaw) + "," + String(jyro_state) + "," + String(lat) + "," + String(lon)+ "," + String(satellite_count) + "," + String(speed) + "," + String(distance) + "," + String(delta_h) + "," + String(gear) + "," + String(battery_voltage);
+  String tmp = String(top_motor_pwm) + "," + String(bottom_motor_pwm) + "," + String(right_motor_pwm) + "," + String(left_motor_pwm) + "," + String(vertical_motor_front_pwm) + "," + String(vertical_motor_back_pwm) + "," + String(roll) + "," + String(pitch) + "," + String(yaw) + "," + String(jyro_state) + "," + String(lat) + "," + String(lon) + "," + String(satellite_count) + "," + String(speed) + "," + String(distance) + "," + String(delta_h) + "," + String(gear) + "," + String(battery_voltage);
 
   Serial1.println(tmp);
 }
@@ -474,6 +474,9 @@ void update_gps()
     lon = sum_lon / 10;
 
     h1 = gps.heading / 100000.0;
+
+    speed = gps.gSpeed * 0.0036;
+    satellite_count = gps.numSV;
 
     if (h1 > 180)
     {
@@ -817,11 +820,13 @@ void loop()
         allowed_pitch_angle = pitch;
         allowed_yaw_angle = yaw;
         state = RESET;
+        start_menu();
       }
       else if(tmp == "2")
       {
         jyro_state = JYRO_DISABLE;
         state = RESET;
+        start_menu();
       }
     }
   }
