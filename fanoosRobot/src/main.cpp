@@ -43,7 +43,6 @@ void ROV_func();
 void mpu_update();
 void motor_off();
 void read_voltage();
-void read_data_from_raspi();
 
 DynamicJsonDocument joystick(1024);
 DynamicJsonDocument setting(1024);
@@ -71,6 +70,8 @@ const float R1 = 36088;
 const float R2 = 4700; 
 
 const int auv_base_pwm = 1750;
+
+const int first_forward_time = 2;
 
 const double pi = 3.14159265358979323;
 const double radius_earth = 6371000.0;
@@ -133,6 +134,7 @@ int jyro_state = 0;
 
 unsigned long int t1 = 0;
 unsigned long int t2 = 0;
+unsigned long int auv_start_time = 0;
 unsigned int interval = 1000;
 
 
@@ -418,7 +420,44 @@ void read_voltage()
 
 void ROV_func()
 {
-  check_gear();
+  if (Serial1.available() > 0)
+  {
+    String tmp = Serial1.readStringUntil('>');
+
+    if (tmp.length() == 113)
+    {
+      deserializeJson(joystick, tmp);
+      joy_front_back = 255 - int(joystick["2"]);
+      joy_left_right = 255 - int(joystick["1"]);
+      joy_up_down_ver = 255 - int(joystick["4"]);
+      joy_up_down_hor = 255 - int(joystick["3"]);
+
+      if (int(joystick["5"]) != 0)
+      {
+        gear = int(joystick["5"]);
+      }
+
+      switch (int(joystick["7"]))
+      {
+        case 1:
+          jyro_state = JYRO_ENABLE;
+          allowed_pitch_angle = pitch;
+          allowed_yaw_angle = yaw;
+          break;
+        case 2:
+          jyro_state = JYRO_DISABLE;
+          break;
+        case 3:
+          digitalWrite(front_led_pin, HIGH);
+          break;
+        case 4:
+          digitalWrite(front_led_pin, LOW);
+          break;      
+      }
+      analogWrite(front_led_pin, int(joystick["9"]));
+    }
+    check_gear();
+  }
   
   if(Serial.available() > 0)
   {
@@ -623,54 +662,10 @@ void motor_off()
   set_motor_pwm();
 }
 
-void read_data_from_raspi()
-{
- if (Serial1.available() > 0)
-  {
-    String tmp = Serial1.readStringUntil('>');
-
-    if (tmp.length() == 113)
-    {
-      deserializeJson(joystick, tmp);
-      joy_front_back = 255 - int(joystick["2"]);
-      joy_left_right = 255 - int(joystick["1"]);
-      joy_up_down_ver = 255 - int(joystick["4"]);
-      joy_up_down_hor = 255 - int(joystick["3"]);
-
-      if (int(joystick["5"]) != 0)
-      {
-        gear = int(joystick["5"]);
-      }
-
-      switch (int(joystick["7"]))
-      {
-        case 1:
-          jyro_state = JYRO_ENABLE;
-          allowed_pitch_angle = pitch;
-          allowed_yaw_angle = yaw;
-          break;
-        case 2:
-          jyro_state = JYRO_DISABLE;
-          break;
-        case 3:
-          digitalWrite(front_led_pin, HIGH);
-          break;
-        case 4:
-          digitalWrite(front_led_pin, LOW);
-          break;      
-      }
-
-      analogWrite(front_led_pin, int(joystick["9"]));
-
-    }
-  }
-}
-
 void loop()
 {
   update_gps();
   mpu_update();
-  read_data_from_raspi();
 
   if (state == RESET)
   {
@@ -791,6 +786,7 @@ void loop()
                 if (tmp == "4")
                 {
                   auv1_run = 1;
+                  auv_start_time = millis();
                   break;
                 }
               }
@@ -801,7 +797,22 @@ void loop()
       }
       else if(auv1_run == 1)
       {
-        AUV1_func();
+        if (millis() - auv_start_time < first_forward_time * 1000)
+        {
+          right_motor_pwm = auv_base_pwm;
+          left_motor_pwm = auv_base_pwm;
+          set_motor_pwm();
+
+          Serial.print(", ");
+          Serial.print(left_motor_pwm);
+          Serial.print(", ");
+          Serial.print(right_motor_pwm);
+          Serial.println();
+        }
+        else
+        {
+          AUV1_func();
+        }
       }
     }
     else if(auv_state == AUV_2)
