@@ -1294,7 +1294,7 @@ border-color: rgb(0, 0, 157);
              <string notr="true"/>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>0</number>
             </property>
             <widget class="QWidget" name="tab">
              <attribute name="title">
@@ -1490,7 +1490,7 @@ color: rgb(225, 255, 29);
                 </property>
                 <layout class="QGridLayout" name="gridLayout_18" columnstretch="5,1,5">
                  <item row="0" column="0">
-                  <widget class="QPushButton" name="btn_controller_connect_2">
+                  <widget class="QPushButton" name="btn_f_camera">
                    <property name="font">
                     <font>
                      <family>Sahel SemiBold</family>
@@ -1521,7 +1521,7 @@ color: rgb(0, 0, 0);</string>
                   </spacer>
                  </item>
                  <item row="0" column="2">
-                  <widget class="QPushButton" name="btn_controller_disconnect_2">
+                  <widget class="QPushButton" name="btn_s_camera">
                    <property name="font">
                     <font>
                      <family>Sahel SemiBold</family>
