@@ -18,8 +18,8 @@ LED_front = 0
 LED_second = 0
 
 data_url = 'http://192.168.0.115:4000/fanoos/v1.0/data'
-camera_1_url = 'http://192.168.0.115:4000//video_feed/1'
-camera_2_url = 'http://192.168.0.115:4000//video_feed/2'
+camera_1_url = 'http://192.168.0.115:4000//video_feed_1'
+camera_2_url = 'http://192.168.0.115:4000//video_feed_2'
 
 threads = {}
 controller = Controller()
