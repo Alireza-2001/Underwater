@@ -18,7 +18,8 @@ LED_front = 0
 LED_second = 0
 
 data_url = 'http://192.168.0.115:4000/fanoos/v1.0/data'
-camera_1_url = 'http://192.168.0.115:4000//video_feed_1'
+camera_1_url = 'http://192.168.0.115:4000//video_feed/1'
+camera_2_url = 'http://192.168.0.115:4000//video_feed/2'
 
 threads = {}
 controller = Controller()
@@ -39,7 +40,7 @@ class RequestsThreadClass(QtCore.QThread):
             try:
                 data = requests.get(data_url)
                 self.data_signal.emit(data.json())
-                sleep(0.2)
+                sleep(0.4)
 
             except Exception as e:
                 data = {'status' : False, 'message' : str(e), 'data' : ''}
@@ -65,6 +66,8 @@ class MainWindowClass(QMainWindow):
         self.btn_socket_connect.clicked.connect(self.socket_connect)
         self.chb_front_camera.toggled.connect(self.chb_front_camera_toggled)
         self.chb_second_camera.toggled.connect(self.chb_second_camera_toggled)
+        self.btn_f_camera.clicked.connect(self.f_camera)
+        # self.btn_s_camera.clicked.connect(self.s_camera)
         self.sl_front_led.valueChanged[int].connect(self.sl_front_led_changeValue)
         self.sl_second_led.valueChanged[int].connect(self.sl_second_led_changeValue)
     
@@ -165,19 +168,6 @@ class MainWindowClass(QMainWindow):
         except Exception as e:
             data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
             self.show_messages(data)
-
-        if front_camera_thread_index in threads:
-            data = {'status' : False, 'message' : 'camera thread is active.', 'data' : ''}
-            self.show_messages(data)
-
-        try:
-            threads[front_camera_thread_index] = CameraThreadClass(url=camera_1_url)
-            threads[front_camera_thread_index].start()
-            threads[front_camera_thread_index].frame_signal.connect(self.display_main_video)
-            threads[front_camera_thread_index].message_signal.connect(self.show_messages)
-        except Exception as e:
-            data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
-            self.show_messages(data)
     
     def closeEvent(self, event):
         if controller_thread_index in threads:
@@ -199,6 +189,34 @@ class MainWindowClass(QMainWindow):
 
         event.accept()
     
+    def f_camera(self):
+        if front_camera_thread_index in threads:
+            data = {'status' : False, 'message' : 'camera thread is active.', 'data' : ''}
+            self.show_messages(data)
+
+        try:
+            threads[front_camera_thread_index] = CameraThreadClass(url=camera_1_url)
+            threads[front_camera_thread_index].start()
+            threads[front_camera_thread_index].frame_signal.connect(self.display_main_video)
+            threads[front_camera_thread_index].message_signal.connect(self.show_messages)
+        except Exception as e:
+            data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
+            self.show_messages(data)
+
+    def s_camera(self):
+        if second_camera_thread_index in threads:
+            data = {'status' : False, 'message' : 'camera thread is active.', 'data' : ''}
+            self.show_messages(data)
+
+        try:
+            threads[second_camera_thread_index] = CameraThreadClass(url=camera_2_url)
+            threads[second_camera_thread_index].start()
+            threads[second_camera_thread_index].frame_signal.connect(self.display_second_video)
+            threads[second_camera_thread_index].message_signal.connect(self.show_messages)
+        except Exception as e:
+            data = {'status' : False, 'message' : 'Problem to starting thread. ' + str(e), 'data' : ''}
+            self.show_messages(data)
+
     def show_data(self, data):
         try:
             data = data['data']
@@ -329,6 +347,21 @@ class MainWindowClass(QMainWindow):
         img = img.rgbSwapped()
 
         self.lbl_video_1.setPixmap(QPixmap.fromImage(img))
+
+    def display_second_video(self, img):
+        qformat = QImage.Format_Indexed8
+
+        if len(img.shape) == 3:
+            if (img.shape[2]) == 4:
+                qformat = QImage.Format_RGBA888
+            else:
+                qformat = QImage.Format_RGB888
+        
+        img = QImage(img, img.shape[1], img.shape[0], qformat)
+        img = img.rgbSwapped()
+
+        self.lbl_video_2.setPixmap(QPixmap.fromImage(img))
+
     
 if __name__ == '__main__':
     app = QApplication(sys.argv)

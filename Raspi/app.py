@@ -9,9 +9,9 @@ try:
     camera_1 = cv2.VideoCapture(0)
     camera_1.set(cv2.CAP_PROP_FRAME_WIDTH, 880)
     camera_1.set(cv2.CAP_PROP_FRAME_HEIGHT, 495)
-    camera_2 = cv2.VideoCapture(1)
-    camera_2.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
-    camera_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 650)
+    # camera_2 = cv2.VideoCapture(1)
+    # camera_2.set(cv2.CAP_PROP_FRAME_WIDTH, 1200)
+    # camera_2.set(cv2.CAP_PROP_FRAME_HEIGHT, 650)
     ser = serial.Serial("/dev/ttyS0", baudrate = 250000)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 except Exception as e:
@@ -111,16 +111,16 @@ def gen_frames_1():
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
-def gen_frames_2():  
-    while True:
-        success, frame = camera_2.read()  # read the camera frame
-        if not success:
-            break
+# def gen_frames_2():  
+#     while True:
+#         success, frame = camera_2.read()  # read the camera frame
+#         if not success:
+#             break
 
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
-        yield (b'--frame\r\n'
-                b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+#         ret, buffer = cv2.imencode('.jpg', frame)
+#         frame = buffer.tobytes()
+#         yield (b'--frame\r\n'
+#                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 
 @app.route("/fanoos/v1.0/data", methods=["GET"])
 def get_data():
@@ -157,17 +157,17 @@ def get_data():
 def index_1():
     return render_template('index_1.html')
 
-@app.route('/2')
-def index_2():
-    return render_template('index_2.html')
+# @app.route('/2')
+# def index_2():
+#     return render_template('index_2.html')
 
 @app.route('/video_feed_1')
 def video_feed_1():
     return Response(gen_frames_1(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/video_feed_2')
-def video_feed_2():
-    return Response(gen_frames_2(), mimetype='multipart/x-mixed-replace; boundary=frame')
+# @app.route('/video_feed_2')
+# def video_feed_2():
+#     return Response(gen_frames_2(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
     main_thread = Thread(target=main)

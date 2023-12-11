@@ -1,6 +1,7 @@
  pyuic5 -x mainwindow.ui -o mainwindow.py   convert ui file to py file
 
-
+ls -al /dev/video*
+v4l2-ctl --list-devices
 
 
 

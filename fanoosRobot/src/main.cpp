@@ -134,6 +134,7 @@ int jyro_state = 0;
 
 unsigned long int t1 = 0;
 unsigned long int t2 = 0;
+unsigned long int t3 = 0;
 unsigned long int auv_start_time = 0;
 unsigned int interval = 1000;
 
@@ -196,9 +197,12 @@ void mpu_config()
 
 void send_data_to_operator()
 {
-  String tmp = String(top_motor_pwm) + "," + String(bottom_motor_pwm) + "," + String(right_motor_pwm) + "," + String(left_motor_pwm) + "," + String(vertical_motor_front_pwm) + "," + String(vertical_motor_back_pwm) + "," + String(roll) + "," + String(pitch) + "," + String(yaw) + "," + String(jyro_state) + "," + String(lat) + "," + String(lon) + "," + String(satellite_count) + "," + String(speed) + "," + String(distance) + "," + String(delta_h) + "," + String(gear) + "," + String(battery_voltage);
-
-  Serial1.println(tmp);
+  if (millis() - t3 > 500)
+  {
+    t3 = millis();
+    String tmp = String(top_motor_pwm) + "," + String(bottom_motor_pwm) + "," + String(right_motor_pwm) + "," + String(left_motor_pwm) + "," + String(vertical_motor_front_pwm) + "," + String(vertical_motor_back_pwm) + "," + String(roll) + "," + String(pitch) + "," + String(yaw) + "," + String(jyro_state) + "," + String(lat) + "," + String(lon) + "," + String(satellite_count) + "," + String(speed) + "," + String(distance) + "," + String(delta_h) + "," + String(gear) + "," + String(battery_voltage);
+    Serial1.println(tmp);
+  }
 }
 
 void check_gear()
@@ -221,7 +225,6 @@ void check_gear()
 
 void check_max_min_motor_pwm()
 {
-  // check max and min motor pwm : 1100 - 1900
   if (right_motor_pwm > 1900)
     right_motor_pwm = 1900;
   if (left_motor_pwm > 1900)
@@ -406,6 +409,7 @@ void mpu_update()
 
 void start_menu()
 {
+  Serial.println("-----------------------------------------------");
   Serial.println(String(ROV) + " : ROV");
   Serial.println(String(AUV) + " : AUV");
   Serial.println(String(JYRO) + " : JYRO");
@@ -448,10 +452,8 @@ void ROV_func()
           jyro_state = JYRO_DISABLE;
           break;
         case 3:
-          digitalWrite(front_led_pin, HIGH);
           break;
         case 4:
-          digitalWrite(front_led_pin, LOW);
           break;      
       }
       analogWrite(front_led_pin, int(joystick["9"]));
@@ -684,7 +686,7 @@ void loop()
       else if (tmp == String(AUV))
       {
         state = AUV;
-
+        Serial.println("-----------------------------------------------");
         Serial.println("1 : AUV 1");
         Serial.println("2 : AUV 2");
         Serial.println("3 : Resrt");
@@ -693,8 +695,10 @@ void loop()
       else if (tmp == String(JYRO))
       {
         state = JYRO;
+        Serial.println("-----------------------------------------------");
         Serial.println("1 : Enable");
         Serial.println("2 : Disable");
+        Serial.println("-----------------------------------------------");
       }
       else if (tmp == String(RESET))
       {
@@ -742,6 +746,7 @@ void loop()
 
         for (int i = 0; i < tmp.toInt(); i++)
         {
+          Serial.println("-----------------------------------------------");
           Serial.println("Point " + String(i+1));
           Serial.println("Enter lat : " + String(i+1));
           while (1)
@@ -802,12 +807,6 @@ void loop()
           right_motor_pwm = auv_base_pwm;
           left_motor_pwm = auv_base_pwm;
           set_motor_pwm();
-
-          Serial.print(", ");
-          Serial.print(left_motor_pwm);
-          Serial.print(", ");
-          Serial.print(right_motor_pwm);
-          Serial.println();
         }
         else
         {
