@@ -59,8 +59,8 @@ Servo back_motor;
 
 const int top_motor_pin = 2;
 const int bottom_motor_pin = 3;
-const int left_motor_pin = 5;
-const int right_motor_pin = 4;
+const int left_motor_pin = 4;
+const int right_motor_pin = 5;
 const int vertical_motor_front_pin = 7;
 const int vertical_motor_back_pin = 6;
 const int front_led_pin = 12;
@@ -71,7 +71,7 @@ const float R2 = 4700;
 
 const int auv_base_pwm = 1750;
 
-const int first_forward_time = 2;
+const int first_forward_time = 3;
 
 const double pi = 3.14159265358979323;
 const double radius_earth = 6371000.0;
@@ -102,11 +102,12 @@ float roll = 0;
 float pitch = 0;
 float yaw = 0;
 
-float k = 1.5;
-double lat_filter[10];
-double lon_filter[10];
-double new_list_lat[10];
-double new_list_lon[10];
+float k = 7;
+int a = 5;
+double lat_filter[5];
+double lon_filter[5];
+double new_list_lat[5];
+double new_list_lon[5];
 double sum_lat = 0.0;
 double sum_lon = 0.0;
 
@@ -179,7 +180,7 @@ void motor_attach()
 void set_motor_pwm()
 {
   check_max_min_motor_pwm();
-  top_motor.writeMicroseconds(top_motor_pwm);
+//  top_motor.writeMicroseconds(top_motor_pwm);
   bottom_motor.writeMicroseconds(bottom_motor_pwm);
   right_motor.writeMicroseconds(right_motor_pwm);
   left_motor.writeMicroseconds(left_motor_pwm);
@@ -490,29 +491,29 @@ void update_gps()
 {
   if (gps.ready())
   {
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < a - 1; i++)
     {
       lat_filter[i] = lat_filter[i + 1];
-      lat_filter[9] = gps.lat;
+      lat_filter[a - 1] = gps.lat;
     }
     sum_lat = 0.0;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < a; i++)
     {
       sum_lat = sum_lat + lat_filter[i];
     }
-    lat = sum_lat / 10;
+    lat = sum_lat / a;
 
-    for (int i = 0; i < 9; i++)
+    for (int i = 0; i < a - 1; i++)
     {
       lon_filter[i] = lon_filter[i + 1];
-      lon_filter[9] = gps.lon;
+      lon_filter[a - 1] = gps.lon;
     }
     sum_lon = 0.0;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < a; i++)
     {
       sum_lon = sum_lon + lon_filter[i];
     }
-    lon = sum_lon / 10;
+    lon = sum_lon / a;
 
     h1 = gps.heading / 100000.0;
 
@@ -606,14 +607,15 @@ void AUV1_func()
       Serial.print(distance, 2);
       Serial.print(", ");
 
-      if (delta_h < -10.0)
+      if (delta_h < -5.0)
       {
         float dif = abs(delta_h + 10);
 
         int coefficient_pwm = int(dif * k);
 
-        right_motor_pwm = auv_base_pwm + coefficient_pwm;
-        left_motor_pwm = auv_base_pwm - coefficient_pwm;
+        right_motor_pwm = auv_base_pwm - coefficient_pwm;
+        left_motor_pwm = auv_base_pwm + coefficient_pwm;
+        bottom_motor_pwm = auv_base_pwm + 150;
         Serial.print("Left");
 
         Serial.print(", ");
@@ -621,25 +623,27 @@ void AUV1_func()
         Serial.print(", ");
         Serial.print(right_motor_pwm);
       }
-      else if (-10.0 <= delta_h && delta_h <= 10.0)
+      else if (-5.0 <= delta_h && delta_h <= 5.0)
       {
         Serial.print("Forward");
         right_motor_pwm = auv_base_pwm;
         left_motor_pwm = auv_base_pwm;
+        bottom_motor_pwm = auv_base_pwm; + 150;
 
         Serial.print(", ");
         Serial.print(left_motor_pwm);
         Serial.print(", ");
         Serial.print(right_motor_pwm);
       }
-      else if (delta_h > 10.0)
+      else if (delta_h > 5.0)
       {
         float dif = abs(delta_h - 10);
 
         int coefficient_pwm = int(dif * k);
 
-        right_motor_pwm = auv_base_pwm - coefficient_pwm;
-        left_motor_pwm = auv_base_pwm + coefficient_pwm;
+        right_motor_pwm = auv_base_pwm + coefficient_pwm;
+        left_motor_pwm = auv_base_pwm - coefficient_pwm;
+        bottom_motor_pwm = auv_base_pwm + 150;
         Serial.print("Right");
 
         Serial.print(", ");
