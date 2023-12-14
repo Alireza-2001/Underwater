@@ -12,6 +12,7 @@
 #define RASPI_BAUDRATE 250000L
 
 #define ROV 1
+#define ROV_1 5
 #define AUV 2
 #define JYRO 3
 #define RESET 4
@@ -43,6 +44,7 @@ void ROV_func();
 void mpu_update();
 void motor_off();
 void read_voltage();
+void jyro_stable_yaw();
 
 DynamicJsonDocument joystick(1024);
 DynamicJsonDocument setting(1024);
@@ -69,12 +71,17 @@ const float Vref = 4.8;
 const float R1 = 36088; 
 const float R2 = 4700; 
 
+const float tolerance_jyro = 5.0;
+const float tolerance_gps = 5.0;
+
 const int auv_base_pwm = 1750;
 
 const int first_forward_time = 3;
 
 const double pi = 3.14159265358979323;
 const double radius_earth = 6371000.0;
+
+const int turn_pwm = 100;
 
 int gear = 1;
 float allowed_yaw_angle = 0;
@@ -121,6 +128,9 @@ unsigned int points_time [30];
 int count_point = 0;
 int current_point = 0;
 
+double rov_1_lat = 0.0;
+double rov_1_lon = 0.0;
+
 float distance;
 double h1 = 0.0;
 double h_t = 0.0;
@@ -131,7 +141,8 @@ int state = RESET;
 int rov_state = 0;
 int auv_state = 0;
 int auv1_run = 0;
-int jyro_state = 0;
+int rov_1_run = 0;
+int jyro_state = JYRO_DISABLE;
 
 unsigned long int t1 = 0;
 unsigned long int t2 = 0;
@@ -257,6 +268,39 @@ void check_max_min_motor_pwm()
     vertical_motor_back_pwm = 1100;
 }
 
+void jyro_stable_yaw()
+{
+  if (jyro_state == JYRO_ENABLE)// jyro yaw angle
+  {
+    if (yaw < allowed_yaw_angle - tolerance_jyro)
+    {
+      dif_yaw_angle = abs(yaw - allowed_yaw_angle);
+      if (dif_yaw_angle < 10)
+        yaw_pwm_step = pwm_step;
+      else if (dif_yaw_angle >= 10 && dif_yaw_angle < 30)
+        yaw_pwm_step = 2*pwm_step;
+      else if (dif_yaw_angle >= 30)
+        yaw_pwm_step = 3*pwm_step;
+
+      left_motor_pwm += yaw_pwm_step;
+      right_motor_pwm -= yaw_pwm_step;
+    }
+    else if (yaw > allowed_yaw_angle + tolerance_jyro)
+    {
+      dif_yaw_angle = abs(yaw - allowed_yaw_angle);
+      if (dif_yaw_angle < 10)
+        yaw_pwm_step = pwm_step;
+      else if (dif_yaw_angle >= 10 && dif_yaw_angle < 30)
+        yaw_pwm_step = 2*pwm_step;
+      else if (dif_yaw_angle >= 30)
+        yaw_pwm_step = 3*pwm_step;
+ 
+      right_motor_pwm += yaw_pwm_step;
+      left_motor_pwm -= yaw_pwm_step;
+    }
+  }
+}
+
 void propulsion_controll(int min_pwm, int max_pwm)
 {
   top_motor_pwm = map(joy_front_back, 0, 255, min_pwm, max_pwm) + 1;
@@ -266,42 +310,48 @@ void propulsion_controll(int min_pwm, int max_pwm)
   {
     right_motor_pwm = map(joy_front_back, 0, 255, min_pwm, max_pwm) + 1;
     left_motor_pwm = map(joy_front_back, 0, 255, min_pwm, max_pwm) + 1;
-    if (jyro_state == JYRO_ENABLE)// jyro yaw angle
-    {
-      if (yaw < allowed_yaw_angle - 2)
-      {
-        dif_yaw_angle = abs(yaw - allowed_yaw_angle);
-        if (dif_yaw_angle < 10)
-          yaw_pwm_step = pwm_step;
-        else if (dif_yaw_angle >= 10 && dif_yaw_angle < 30)
-          yaw_pwm_step = 2*pwm_step;
-        else if (dif_yaw_angle >= 30)
-          yaw_pwm_step = 3*pwm_step;
-
-        left_motor_pwm += yaw_pwm_step;
-        right_motor_pwm -= yaw_pwm_step;
-      }
-      else if (yaw > allowed_yaw_angle + 2)
-      {
-        dif_yaw_angle = abs(yaw - allowed_yaw_angle);
-        if (dif_yaw_angle < 10)
-          yaw_pwm_step = pwm_step;
-        else if (dif_yaw_angle >= 10 && dif_yaw_angle < 30)
-          yaw_pwm_step = 2*pwm_step;
-        else if (dif_yaw_angle >= 30)
-          yaw_pwm_step = 3*pwm_step;
- 
-        right_motor_pwm += yaw_pwm_step;
-        left_motor_pwm -= yaw_pwm_step;
-      }
-    }
   }
   else
-  {
+  { // right and left
     right_motor_pwm = map(255 - joy_left_right, 0, 255, min_pwm, max_pwm) + 1;
     left_motor_pwm = map(joy_left_right, 0, 255, min_pwm, max_pwm) + 1;
+
     allowed_yaw_angle = yaw;
   }
+
+
+  if (int(joystick["6"]) == 1) //   forward
+  {
+    top_motor_pwm = max_pwm;
+    bottom_motor_pwm = max_pwm;
+    right_motor_pwm = max_pwm;
+    left_motor_pwm = max_pwm;
+  }
+  else if (int(joystick["6"]) == 2) //    right
+  {
+    top_motor_pwm = max_pwm;
+    bottom_motor_pwm = max_pwm;
+    right_motor_pwm = max_pwm + turn_pwm;
+    left_motor_pwm = max_pwm - turn_pwm;
+    allowed_yaw_angle = yaw; 
+  }
+  else if (int(joystick["6"]) == 3) //    back
+  {
+    top_motor_pwm = min_pwm;
+    bottom_motor_pwm = min_pwm;
+    right_motor_pwm = min_pwm;
+    left_motor_pwm = min_pwm;    
+  }
+  else if (int(joystick["6"]) == 4) //    left
+  {
+    top_motor_pwm = max_pwm;
+    bottom_motor_pwm = max_pwm;
+    right_motor_pwm = max_pwm - turn_pwm;
+    left_motor_pwm = max_pwm + turn_pwm;
+    allowed_yaw_angle = yaw;
+  }
+
+  jyro_stable_yaw();
 
   up_down_controll(1100, 1900);
 
@@ -352,7 +402,7 @@ void up_down_controll(int min_pwm, int max_pwm)
 
     if (jyro_state == JYRO_ENABLE)
     {
-      if (pitch < allowed_pitch_angle - 2)
+      if (pitch < allowed_pitch_angle - tolerance_jyro)
       {
         dif_pitch_angle = abs(pitch - allowed_pitch_angle);
         if (dif_pitch_angle < 10)
@@ -365,7 +415,7 @@ void up_down_controll(int min_pwm, int max_pwm)
         vertical_motor_back_pwm += pitch_pwm_step;
         vertical_motor_front_pwm -= pitch_pwm_step;
       }
-      else if (pitch > allowed_pitch_angle + 2)
+      else if (pitch > allowed_pitch_angle + tolerance_jyro)
       {
         dif_pitch_angle = abs(pitch - allowed_pitch_angle);
         if (dif_pitch_angle < 10)
@@ -415,6 +465,7 @@ void start_menu()
   Serial.println(String(AUV) + " : AUV");
   Serial.println(String(JYRO) + " : JYRO");
   Serial.println(String(RESET) + " : RESET");
+  Serial.println(String(ROV_1) + " : ROV 1");
   Serial.println("-----------------------------------------------");
 }
 
@@ -460,6 +511,15 @@ void ROV_func()
       analogWrite(front_led_pin, int(joystick["9"]));
     }
     check_gear();
+  }
+  else
+  {
+    top_motor.writeMicroseconds(1500);
+    bottom_motor.writeMicroseconds(1500);
+    right_motor.writeMicroseconds(1500);
+    left_motor.writeMicroseconds(1500);
+    front_motor.writeMicroseconds(1500);
+    back_motor.writeMicroseconds(1500);
   }
   
   if(Serial.available() > 0)
@@ -577,6 +637,18 @@ void AUV1_func()
             break;
           }
         }
+
+        t2 = millis();
+        right_motor_pwm = auv_base_pwm + 150;
+        left_motor_pwm = auv_base_pwm + 150;
+        bottom_motor_pwm = auv_base_pwm; + 150;
+        while (1)
+        {
+          if (millis() - t2 > first_forward_time * 1000)
+          {
+            break;
+          }
+        }
         
         current_point ++;
       }
@@ -607,7 +679,7 @@ void AUV1_func()
       Serial.print(distance, 2);
       Serial.print(", ");
 
-      if (delta_h < -5.0)
+      if (delta_h < -1*tolerance_gps)
       {
         float dif = abs(delta_h + 10);
 
@@ -623,11 +695,11 @@ void AUV1_func()
         Serial.print(", ");
         Serial.print(right_motor_pwm);
       }
-      else if (-5.0 <= delta_h && delta_h <= 5.0)
+      else if (-1*tolerance_gps <= delta_h && delta_h <= tolerance_gps)
       {
         Serial.print("Forward");
-        right_motor_pwm = auv_base_pwm;
-        left_motor_pwm = auv_base_pwm;
+        right_motor_pwm = auv_base_pwm + 150;
+        left_motor_pwm = auv_base_pwm + 150;
         bottom_motor_pwm = auv_base_pwm; + 150;
 
         Serial.print(", ");
@@ -635,7 +707,7 @@ void AUV1_func()
         Serial.print(", ");
         Serial.print(right_motor_pwm);
       }
-      else if (delta_h > 5.0)
+      else if (delta_h > tolerance_gps)
       {
         float dif = abs(delta_h - 10);
 
@@ -654,6 +726,19 @@ void AUV1_func()
       Serial.println();
     }
     set_motor_pwm();
+  }
+
+  if (Serial.available() > 0)
+  {
+    String tmp = Serial.readString();
+
+    if (tmp == "85")
+    {
+      state = RESET;
+      auv1_run = 0;
+      auv_state = AUV_STOP;
+      start_menu();
+    }
   }
 }
 
@@ -709,6 +794,13 @@ void loop()
         state = RESET;
         Serial.println("Reset Done.");
         start_menu();
+      }
+      else if (tmp == String(ROV_1))
+      {
+        state = ROV_1;
+        rov_1_run = 0;
+        Serial.println("-----------------------------------------------");
+        Serial.println("point :");
       }
     }
   }
@@ -844,12 +936,52 @@ void loop()
       }
     }
   }
+  else if (state == ROV_1)
+  {
+    if (rov_1_run == 0)
+    {
+      Serial.println("Enter lat : ");
+      while (1)
+      {
+        float tmp = Serial.parseFloat();
+        if (tmp)
+        {
+          rov_1_lat = double(tmp);
+          break;
+        }
+      }
+      Serial.println("Enter lon : ");
+      while (1)
+      {
+        float tmp = Serial.parseFloat();
+        if (tmp)
+        {
+          rov_1_lon = double(tmp);
+          break;
+        }
+      }
+
+      rov_1_run = 1;
+      Serial.println("ROV 1 started...");
+      Serial.println("1 : Stop");
+    }
+    else
+    {
+      ROV_func();
+
+      h_t = atan2(rov_1_lat - lat, rov_1_lon - lon) * 180 / pi;
+      distance = haversine_distance(lat, lon, rov_1_lat, rov_1_lon);
+
+      Serial.print(lat / 10000000.0, 7);
+      Serial.print(", ");
+      Serial.print(lon / 10000000.0, 7);
+      Serial.print(", ");
+      Serial.print(delta_h, 2);
+      Serial.print(", ");
+      Serial.print(distance, 2);
+    }
+  }
   
   read_voltage();
   send_data_to_operator();
 }
-
-
-//  318356933    543539085
-//  318361053    543540306
-//  318356552    543541297
