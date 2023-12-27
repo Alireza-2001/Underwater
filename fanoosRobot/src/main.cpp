@@ -72,11 +72,11 @@ const float R1 = 36088;
 const float R2 = 4700; 
 
 const float tolerance_jyro = 5.0;
-const float tolerance_gps = 5.0;
+const float tolerance_gps = 10.0;
 
 const int auv_base_pwm = 1750;
 
-const int first_forward_time = 3;
+const int first_forward_time = 5;
 
 const double pi = 3.14159265358979323;
 const double radius_earth = 6371000.0;
@@ -109,12 +109,10 @@ float roll = 0;
 float pitch = 0;
 float yaw = 0;
 
-float k = 7;
+float k = 6;
 int a = 5;
 double lat_filter[5];
 double lon_filter[5];
-double new_list_lat[5];
-double new_list_lon[5];
 double sum_lat = 0.0;
 double sum_lon = 0.0;
 
@@ -169,22 +167,16 @@ void motor_attach()
 {
   top_motor.attach(top_motor_pin);
   top_motor.writeMicroseconds(1500);
-
   bottom_motor.attach(bottom_motor_pin);
   bottom_motor.writeMicroseconds(1500);
-
   right_motor.attach(right_motor_pin);
   right_motor.writeMicroseconds(1500);
-
   left_motor.attach(left_motor_pin);
   left_motor.writeMicroseconds(1500);
-
   front_motor.attach(vertical_motor_front_pin);
   front_motor.writeMicroseconds(1500);
-
   back_motor.attach(vertical_motor_back_pin);
   back_motor.writeMicroseconds(1500);
-  
   delay(4000);
 }
 
@@ -593,6 +585,11 @@ void update_gps()
     {
       h1 = 90 - h1;
     }
+
+    // Serial.print(lat, 7);
+    // Serial.print(",");
+    // Serial.print(lon, 7);
+    // Serial.println();
   }
 }
 
@@ -605,7 +602,7 @@ void AUV1_func()
     h_t = atan2(points_lat[current_point] - lat, points_lon[current_point] - lon) * 180 / pi;
     distance = haversine_distance(lat, lon, points_lat[current_point], points_lon[current_point]);
 
-    if (distance < 1.5)
+    if (distance < 2.0)
     {
       if (current_point == count_point - 1)
       {
@@ -641,7 +638,7 @@ void AUV1_func()
         t2 = millis();
         right_motor_pwm = auv_base_pwm + 150;
         left_motor_pwm = auv_base_pwm + 150;
-        bottom_motor_pwm = auv_base_pwm; + 150;
+        bottom_motor_pwm = auv_base_pwm + 150;
         while (1)
         {
           if (millis() - t2 > first_forward_time * 1000)
@@ -666,14 +663,6 @@ void AUV1_func()
         delta_h = 360 - abs(delta_h);        
       }
 
-      Serial.print(lat / 10000000.0, 7);
-      Serial.print(", ");
-      Serial.print(lon / 10000000.0, 7);
-      Serial.print(", ");
-      Serial.print(h1, 2);
-      Serial.print(", ");
-      Serial.print(h_t, 2);
-      Serial.print(", ");
       Serial.print(delta_h, 2);
       Serial.print(", ");
       Serial.print(distance, 2);
@@ -681,7 +670,7 @@ void AUV1_func()
 
       if (delta_h < -1*tolerance_gps)
       {
-        float dif = abs(delta_h + 10);
+        float dif = abs(delta_h + tolerance_gps);
 
         int coefficient_pwm = int(dif * k);
 
@@ -700,7 +689,7 @@ void AUV1_func()
         Serial.print("Forward");
         right_motor_pwm = auv_base_pwm + 150;
         left_motor_pwm = auv_base_pwm + 150;
-        bottom_motor_pwm = auv_base_pwm; + 150;
+        bottom_motor_pwm = auv_base_pwm;
 
         Serial.print(", ");
         Serial.print(left_motor_pwm);
@@ -709,7 +698,7 @@ void AUV1_func()
       }
       else if (delta_h > tolerance_gps)
       {
-        float dif = abs(delta_h - 10);
+        float dif = abs(delta_h - tolerance_gps);
 
         int coefficient_pwm = int(dif * k);
 
@@ -983,5 +972,5 @@ void loop()
   }
   
   read_voltage();
-  send_data_to_operator();
+  // send_data_to_operator();
 }
